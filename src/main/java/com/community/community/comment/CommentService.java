@@ -44,12 +44,17 @@ public class CommentService {
 //    @Transactional(readOnly = true)
 //    public
 
-    public Long updateComment(Long commentId, CommentUpdateRequest request) {
+    public Long updateComment(Long postId,Long commentId, CommentUpdateRequest request) {
         // 1. 수정할 댓글 DB에서 조회
         CommentEntity comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
 
-        // 2. 내용 변경 (더티 체킹)
+        // 2. 주소 postId와 실제 postId가 같은지 검증
+        if (!comment.getPostEntity().getId().equals(postId)) {
+            throw new IllegalArgumentException("해당 게시글의 댓글이 아닙니다.");
+        }
+
+        // 3. 내용 변경 (더티 체킹)
         comment.update(request.content());
 
         return comment.getId();

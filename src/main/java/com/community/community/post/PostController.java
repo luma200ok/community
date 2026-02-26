@@ -1,7 +1,10 @@
 package com.community.community.post;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,9 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
-import static com.community.community.post.PostDto.*;
+import static com.community.community.post.PostDto.PostCreateRequest;
+import static com.community.community.post.PostDto.PostDetailResponse;
+import static com.community.community.post.PostDto.PostListResponse;
+import static com.community.community.post.PostDto.PostUpdateRequest;
 
 @RestController
 @RequiredArgsConstructor
@@ -57,9 +61,14 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PostListResponse>> getAllPost() {
+    public ResponseEntity<Page<PostListResponse>> getAllPost(
+            @PageableDefault(size = 10, sort = "createdAt",direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        // 클라이언트가 page,size 안보내면 기본값 설정
+
+
         // 1. 서비스에서 전체 글 목록을 가져옴
-        List<PostListResponse> responses = postService.getAllPost();
+        Page<PostListResponse> responses = postService.getAllPost(pageable);
 
         return ResponseEntity.ok(responses);
     }

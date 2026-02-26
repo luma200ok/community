@@ -5,6 +5,8 @@ import com.community.community.comment.CommentRepository;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,11 +75,22 @@ public class PostService {
         postRepository.delete(post);
     }
 
+    /*
     @Transactional(readOnly = true)
     public List<PostListResponse> getAllPost() {
+        // 1. 게시글 List 조회
         List<PostEntity> posts = postRepository.findAll();
 
         return posts.stream()
                 .map(PostListResponse::from).toList();
+    }
+    */
+
+    @Transactional(readOnly = true)
+    public Page<PostListResponse> getAllPost(Pageable pageable) {
+        // 1. 게시글 List 조회
+        Page<PostEntity> posts = postRepository.findAll(pageable);
+
+        return posts.map(PostListResponse::from);
     }
 }

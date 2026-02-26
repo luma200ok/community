@@ -35,7 +35,7 @@ public class CommentController {
             @PathVariable Long commentId,
             @RequestBody CommentUpdateRequest request
     ) {
-        commentService.updateComment(commentId, request);
+        commentService.updateComment(postId,commentId, request);
         return ResponseEntity.ok("댓글 수정이 완료되었습니다.");
     }
 

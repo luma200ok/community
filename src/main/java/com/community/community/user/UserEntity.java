@@ -36,4 +36,10 @@ public class UserEntity {
         this.password = password;
         this.email = email;
     }
+
+    @Builder
+    public UserEntity(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
 }
