@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.community.community.user.UserDto.UserSignupRequest;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 

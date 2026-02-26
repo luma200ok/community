@@ -11,7 +11,6 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-
     /**
      * 회원가입 기능
      */
@@ -28,7 +27,6 @@ public class UserService {
 
     /**
      * 로그인 기능
-     *
      * @return 로그인 성공 시 회원 ID(PK) 반환
      */
     @Transactional(readOnly = true)

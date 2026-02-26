@@ -9,14 +9,18 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Setter
+@Table(name = "post")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostEntity {
 
     @Id
@@ -34,4 +38,17 @@ public class PostEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity userEntity;
+
+    @Builder
+    public PostEntity(String title, String content, UserEntity userEntity) {
+        this.title = title;
+        this.content = content;
+        this.userEntity = userEntity;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public void update(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
 }
