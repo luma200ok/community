@@ -16,10 +16,6 @@ public class UserController {
 
     private final UserService userService;
 
-    /**
-     * 회원 가입API
-     * URL: POST /api/users/singup
-     */
 
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody UserSignupRequest request) {

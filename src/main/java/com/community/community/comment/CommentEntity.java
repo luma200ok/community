@@ -10,14 +10,19 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "comment")
 public class CommentEntity {
 
     @Id
@@ -37,4 +42,15 @@ public class CommentEntity {
     @JoinColumn(name = "post_id")
     private PostEntity postEntity;
 
+    @Builder
+    public CommentEntity(String content, UserEntity userEntity, PostEntity postEntity) {
+        this.content = content;
+        this.userEntity = userEntity;
+        this.postEntity = postEntity;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public void update(String content) {
+        this.content = content;
+    }
 }

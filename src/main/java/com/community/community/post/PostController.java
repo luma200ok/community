@@ -23,10 +23,6 @@ public class PostController {
 
     private final PostService postService;
 
-    /**
-     * 게시글 작성 API
-     * URL: POST api/posts
-     */
     @PostMapping
     public ResponseEntity<String> writePost(@RequestBody PostCreateRequest request) {
         Long postId = postService.writePost(request);
@@ -35,10 +31,10 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostResponse> getPost(@PathVariable Long id) {
+    public ResponseEntity<PostDetailResponse> getPost(@PathVariable Long id) {
 
         // URL에서 뽑아낸 ID값을 서비스에 넘겨 DTO 받음
-        PostResponse response = postService.getPost(id);
+        PostDetailResponse response = postService.getPost(id);
 
         return ResponseEntity.ok(response);
     }
@@ -61,10 +57,10 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PostResponse>> getAllPost() {
+    public ResponseEntity<List<PostListResponse>> getAllPost() {
         // 1. 서비스에서 전체 글 목록을 가져옴
-        List<PostResponse> responses = postService.getAllPost();
-        
+        List<PostListResponse> responses = postService.getAllPost();
+
         return ResponseEntity.ok(responses);
     }
 }
