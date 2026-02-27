@@ -12,8 +12,8 @@ public class PostDto {
 
     public record PostCreateRequest(
             String title,
-            String content,
-            Long userId // 글쓴이 식별용
+            String content
+//            Long userId // 글쓴이 식별용 -> JWT 필터로 user 확인
     ) {
     }
 

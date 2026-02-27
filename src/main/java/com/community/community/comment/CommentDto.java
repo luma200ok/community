@@ -5,9 +5,7 @@ import java.time.LocalDateTime;
 public class CommentDto {
 
     public record CommentCreateRequest(
-            String content,
-            Long userId
-    ) {
+            String content) {
     }
 
     public record CommentResponse(

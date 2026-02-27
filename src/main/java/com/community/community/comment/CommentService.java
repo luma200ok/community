@@ -1,5 +1,6 @@
 package com.community.community.comment;
 
+import com.community.community.config.JwtUtil;
 import com.community.community.post.PostEntity;
 import com.community.community.post.PostRepository;
 import com.community.community.user.UserEntity;
@@ -19,13 +20,13 @@ public class CommentService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
 
-    public Long writeComment(Long postId, CommentCreateRequest request) {
+    public Long writeComment(Long postId, CommentCreateRequest request, Long userId) {
 
-        // 1. 댓글을 다는 사용자(User)가 존재 하는지 확인
-        UserEntity user = userRepository.findById(request.userId())
+        // 1. 댓글을 작성하는 사용자(User)가 존재 하는지 확인
+        UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
-        // 2. 댓글이 달릴 게시글(Post)가 존재 하는지 확인
+        // 2. 댓글이 게시될 게시글(Post)이 존재 하는지 확인
         PostEntity post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
 
@@ -41,31 +42,41 @@ public class CommentService {
         return comment.getId();
     }
 
-//    @Transactional(readOnly = true)
-//    public
-
-    public Long updateComment(Long postId,Long commentId, CommentUpdateRequest request) {
+    public void updateComment(
+            Long postId, Long commentId, CommentUpdateRequest request, Long userId) {
         // 1. 수정할 댓글 DB에서 조회
         CommentEntity comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
 
-        // 2. 주소 postId와 실제 postId가 같은지 검증
+        // 2. 주소 postId와 실제 postId 일치 검증
         if (!comment.getPostEntity().getId().equals(postId)) {
             throw new IllegalArgumentException("해당 게시글의 댓글이 아닙니다.");
         }
 
-        // 3. 내용 변경 (더티 체킹)
+        // 3. 댓글 작성자와 수정 요청자의 ID 일치 검증
+        if (!comment.getUserEntity().getId().equals(userId)) {
+            throw new IllegalArgumentException("작성자만 수정할 수 있습니다.");
+        }
+        // 4. 내용 변경 (더티 체킹)
         comment.update(request.content());
-
-        return comment.getId();
     }
 
-    public void deleteComment(Long commentId) {
+    public void deleteComment(Long postId, Long commentId, Long userId) {
         // 1. 삭제할 댓글 DB에서 조회
         CommentEntity comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
 
-        // 2. DB에서 삭제
+        // 2. 주소 postId와 실제 postId 일치 검증
+        if (!comment.getPostEntity().getId().equals(postId)) {
+            throw new IllegalArgumentException("해당 게시글의 댓글이 아닙니다.");
+        }
+
+        // 3. 댓글 작성자와 삭제 요청자의 ID 일치 검증
+        if (!comment.getUserEntity().getId().equals(userId)) {
+            throw new IllegalArgumentException("작성자만 삭제할 수 있습니다.");
+        }
+
+        // 4. DB에서 삭제
         commentRepository.delete(comment);
     }
 }
