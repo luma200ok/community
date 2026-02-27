@@ -1,5 +1,7 @@
 package com.community.community.config;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.hibernate.annotations.Comment;
@@ -38,5 +40,29 @@ public class JwtUtil {
                 .signWith(secretKey)
                 // 4. 문자열로 압축
                 .compact();
+    }
+
+    /**
+     *  1. 토큰 해독기: 토큰을 열어 내부 알맹이 확인
+     *   이 과정에서 토큰이 조작되거나 만료되었다면 에러 발생
+     */
+    public Claims getClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token).getPayload();
+    }
+
+    /**
+     * 토큰 검증기 : 이 토큰이 유효한지 확인.
+     */
+
+    public boolean validateToken(String token) {
+        try {
+            getClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 }
