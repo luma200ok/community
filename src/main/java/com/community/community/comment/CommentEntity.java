@@ -1,5 +1,6 @@
 package com.community.community.comment;
 
+import com.community.community.common.BaseTimeEntity;
 import com.community.community.post.PostEntity;
 import com.community.community.user.UserEntity;
 import jakarta.persistence.Column;
@@ -23,7 +24,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "comment")
-public class CommentEntity {
+public class CommentEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +33,6 @@ public class CommentEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -47,7 +47,6 @@ public class CommentEntity {
         this.content = content;
         this.userEntity = userEntity;
         this.postEntity = postEntity;
-        this.createdAt = LocalDateTime.now();
     }
 
     public void update(String content) {

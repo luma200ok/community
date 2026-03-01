@@ -11,6 +11,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        default_batch_fetch_size: 100 # IN 쿼리로 100개씩 묶어서 가져옴
 
   h2:
     console:

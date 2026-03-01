@@ -1,5 +1,6 @@
 package com.community.community.post;
 
+import com.community.community.common.BaseTimeEntity;
 import com.community.community.user.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
 @Getter
 @Table(name = "post")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostEntity {
+public class PostEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,8 +37,6 @@ public class PostEntity {
     @Column(nullable = false)
     private int viewCount = 0;
 
-    private LocalDateTime createdAt;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity userEntity;
@@ -47,7 +46,6 @@ public class PostEntity {
         this.title = title;
         this.content = content;
         this.userEntity = userEntity;
-        this.createdAt = LocalDateTime.now();
     }
 
     public void update(String title, String content) {
