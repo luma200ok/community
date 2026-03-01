@@ -7,6 +7,7 @@ import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +62,7 @@ public class PostService {
 
         // 2. 작성자와 수정 요청자 일치 검증
         if (!post.getUserEntity().getId().equals(userId)) {
-            throw new IllegalArgumentException("작성자만 수정할 수 있습니다.");
+            throw new AccessDeniedException("작성자만 수정할 수 있습니다.");
         }
 
         // 3. 통과시 수정

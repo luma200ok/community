@@ -6,6 +6,7 @@ import com.community.community.post.PostRepository;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,7 +56,7 @@ public class CommentService {
 
         // 3. 댓글 작성자와 수정 요청자의 ID 일치 검증
         if (!comment.getUserEntity().getId().equals(userId)) {
-            throw new IllegalArgumentException("작성자만 수정할 수 있습니다.");
+            throw new AccessDeniedException("작성자만 수정할 수 있습니다.");
         }
         // 4. 내용 변경 (더티 체킹)
         comment.update(request.content());

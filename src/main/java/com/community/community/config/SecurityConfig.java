@@ -19,6 +19,9 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+
     /**
      * 1. 비밀번호 암호화
      * 비밀번호 평문 -> 해쉬값으로 전환
@@ -38,6 +41,11 @@ public class SecurityConfig {
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint) // 401
+                        .accessDeniedHandler(jwtAccessDeniedHandler) // 403
                 )
 
                 // 💡 1. H2 콘솔의 iframe 화면이 정상적으로 보이도록 허용해 줍니다.
