@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.community.community.post.PostDto.PostCreateRequest;
@@ -68,12 +69,13 @@ public class PostController {
 
     @GetMapping
     public ResponseEntity<Page<PostListResponse>> getAllPost(
+            @RequestParam(required = false) String keyword,
             @PageableDefault(size = 10, sort = "createdAt",direction = Sort.Direction.DESC)
             Pageable pageable) {
         // 클라이언트가 page,size 안보내면 기본값 설정
 
         // 1. 서비스에서 전체 글 목록을 가져옴
-        Page<PostListResponse> responses = postService.getAllPost(pageable);
+        Page<PostListResponse> responses = postService.getAllPost(pageable,keyword);
 
         return ResponseEntity.ok(responses);
     }
