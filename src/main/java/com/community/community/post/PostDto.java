@@ -22,6 +22,7 @@ public class PostDto {
             String title,
             String content,
             String writer,
+            int viewCount,
             LocalDateTime createdAt,
             List<CommentResponse> comments // 댓글 리스트
     ) {
@@ -32,6 +33,7 @@ public class PostDto {
                     post.getTitle(),
                     post.getContent(),
                     post.getUserEntity().getUsername(),
+                    post.getViewCount(),
                     post.getCreatedAt(),
                     comments.stream().map(CommentResponse::from).toList()
             );
@@ -42,6 +44,7 @@ public class PostDto {
             Long id,
             String title,
             String writer,
+            int viewCount,
             LocalDateTime createdAt
     ) {
         public static PostListResponse from(PostEntity post) {
@@ -49,6 +52,7 @@ public class PostDto {
                     post.getId(),
                     post.getTitle(),
                     post.getUserEntity().getUsername(),
+                    post.getViewCount(),
                     post.getCreatedAt()
             );
         }

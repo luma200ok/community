@@ -33,6 +33,9 @@ public class PostEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(nullable = false)
+    private int viewCount = 0;
+
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,5 +53,9 @@ public class PostEntity {
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public void increaseViewCount() {
+        this.viewCount++;
     }
 }

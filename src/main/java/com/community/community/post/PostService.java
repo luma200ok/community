@@ -47,17 +47,21 @@ public class PostService {
 
     /**
      * 게시글 단건 조회 (Id)
+     * Transactional readOnly -> 조회수 증가 로직 때문에 주석처리
      */
-    @Transactional(readOnly = true)
+//    @Transactional(readOnly = true)
     public PostDetailResponse getPost(Long id) {
         // 1. 글 번호를 통해 DB에서 게시글 조회. 없으면 에러
         PostEntity post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
 
-        // 2. 게시글에 달린 댓글 가져오기
+        // 2. 게시글 조회시 조회수 1 증가
+        post.increaseViewCount();
+
+        // 3. 게시글에 달린 댓글 가져오기
         List<CommentEntity> comments = commentRepository.findByPostEntityId(id);
 
-        // 2. 찾은 Entity를 DTO로 변환해서 반환
+        // 4. 찾은 Entity를 DTO로 변환해서 반환
         return PostDetailResponse.from(post, comments);
     }
 
