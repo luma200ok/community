@@ -14,8 +14,8 @@ public class GlobalExceptionHandler {
      * IllegalArgumentException 이 터지면 이 메서드가 실행됩니다.
      * 우리가 서비스 로직에서 orElseThrow(...)로 던졌던 바로 그 에러입니다!
      */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(RuntimeException e) {
 
         // 1. 상태 코드는 400 (잘못된 요청)으로 설정
         HttpStatus status = HttpStatus.BAD_REQUEST;

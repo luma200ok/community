@@ -59,6 +59,9 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
+                        // 스프링 부트가 내부적으로 호출하는 에러 URL 통과 허용
+                        .requestMatchers("/error").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
