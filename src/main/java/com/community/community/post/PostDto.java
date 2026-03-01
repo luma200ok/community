@@ -32,7 +32,7 @@ public class PostDto {
                     post.getId(),
                     post.getTitle(),
                     post.getContent(),
-                    post.getUserEntity().getUsername(),
+                    post.getUserEntity().getUsername(), // N+1 터지는 지점
                     post.getViewCount(),
                     post.getCreatedAt(),
                     comments.stream().map(CommentResponse::from).toList()
