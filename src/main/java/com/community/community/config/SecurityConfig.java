@@ -61,6 +61,8 @@ public class SecurityConfig {
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
                         // 스프링 부트가 내부적으로 호출하는 에러 URL 통과 허용
                         .requestMatchers("/error").permitAll()
+                        // 스웨거 관련 주소 통과 허용
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         .anyRequest().authenticated()
                 )

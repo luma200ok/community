@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
+
 import static com.community.community.exception.ErrorDto.*;
 
 @RestControllerAdvice
@@ -25,5 +27,15 @@ public class GlobalExceptionHandler {
 
         // 3. 반환
         return ResponseEntity.status(status).body(errorResponse);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
+
+        // 상태 코드를 403으로 명시!
+        HttpStatus status = HttpStatus.FORBIDDEN;
+
+        // 에러 메시지는 우리가 서비스에서 던진 "작성자만 수정/삭제할 수 있습니다." 가 들어갑니다.
+        return ResponseEntity.status(status).body(new ErrorResponse(status.value(), e.getMessage()));
     }
 }

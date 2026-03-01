@@ -94,7 +94,7 @@ public class PostService {
 
         // 2. 작성자와 삭제 요청자 일치 검증
         if (!post.getUserEntity().getId().equals(userId)) {
-            throw new IllegalArgumentException("작성자만 삭제할 수 있습니다.");
+            throw new AccessDeniedException("작성자만 삭제할 수 있습니다.");
         }
 
         // 3. 찾은 게시글을 DB에서 삭제.
