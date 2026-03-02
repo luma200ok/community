@@ -19,7 +19,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
 
     //회원가입 기능
-    public Long singUp(UserSignupRequest request) {
+    public Long signUp(UserSignupRequest request) {
         // 1. 이름,이메일 중복 검사
         validateDuplicateUsername(request.username());
         validateDuplicateEmail(request.email());

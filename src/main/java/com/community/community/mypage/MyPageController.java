@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.community.community.comment.CommentDto.CommentResponse;
 import static com.community.community.post.PostDto.PostListResponse;
 
-@Tag(name = "\uD83D\uDC64 마이 페이지" ,description = "나의 정보 조회(게시글 ,댓글 ,좋아요, 비밀번호 변경)")
+@Tag(name = "\uD83D\uDC64 마이 페이지" ,description = "나의 정보 (게시글 ,댓글 ,좋아요) 조회, 비밀번호 변경을 담당하는 API 입니다.")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/mypage")
