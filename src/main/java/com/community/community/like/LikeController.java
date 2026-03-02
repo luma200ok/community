@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "❤\uFE0F 좋아요 API\", description = \"게시글 좋아요 등록 및 취소 기능을 담당합니다.")
+@Tag(name = "❤\uFE0F 좋아요 API\"" ,description = "게시글 좋아요 등록 및 취소 기능을 담당합니다.")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/posts/{postId}/likes")

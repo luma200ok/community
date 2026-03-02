@@ -16,4 +16,7 @@ public interface PostRepository  extends JpaRepository<PostEntity, Long> {
     @EntityGraph(attributePaths = {"userEntity"})
     Page<PostEntity> findByTitleContainingOrContentContaining(String title, String content,
                                                               Pageable pageable);
+
+    // 특정 유저가 쓴 글 목록 조회
+    Page<PostEntity> findByUserEntity_id(Long userId, Pageable pageable);
 }

@@ -1,8 +1,8 @@
 package com.community.community.like;
 
+import com.community.community.common.BaseTimeEntity;
 import com.community.community.post.PostEntity;
 import com.community.community.user.UserEntity;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "post_like")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class LikeEntity {
+public class LikeEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

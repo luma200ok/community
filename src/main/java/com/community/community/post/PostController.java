@@ -36,8 +36,7 @@ public class PostController {
 
     private final PostService postService;
 
-    @Operation(
-            summary = "새 게시글 작성",
+    @Operation(summary = "새 게시글 작성",
             description = "제목과 내용을 입력받아 새로운 게시글을 등록합니다.\n\n" +
                     "**요청 데이터:** 작성할 게시글 제목(`title`)과 내용(`content`)\n" +
                     "**권한:** **JWT 토큰이 필수**이며, 로그인 인증에 성공한 사용자만 게시글을 작성할 수 있습니다.")
@@ -92,8 +91,7 @@ public class PostController {
         return ResponseEntity.ok("게시글 삭제가 완료되었습니다.");
     }
 
-    @Operation(
-            summary = "게시글 목록 조회",
+    @Operation(summary = "게시글 목록 조회",
             description = "전체 게시글 목록을 페이징하여 조회하며, 키워드 검색 기능을 지원합니다.\n\n" +
                     "**요청 데이터:**\n" +
                     "- `keyword`: 제목 또는 내용 검색어 (선택)\n" +
@@ -105,13 +103,11 @@ public class PostController {
             @RequestParam(required = false) String keyword,
             @Parameter(
                     description = "페이지 정보 (예시 데이터를 참고하세요)",
-                    // Schema를 명시하고 example(단수!)을 사용
                     example = "{\"page\": 0, \"size\": 10, \"sort\": \"createdAt,desc\"}"
             )
             @PageableDefault(size = 10, sort = "createdAt",direction = Sort.Direction.DESC)
             Pageable pageable) {
         // 클라이언트가 page,size 안보내면 기본값 설정
-
         // 1. 서비스에서 전체 글 목록을 가져옴
         Page<PostListResponse> responses = postService.getAllPost(pageable,keyword);
 
