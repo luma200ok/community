@@ -35,7 +35,10 @@ public class PostEntity extends BaseTimeEntity {
     private String content;
 
     @Column(nullable = false)
-    private int viewCount = 0;
+    private Long viewCount = 0L;
+
+    @Column(nullable = false)
+    private Long likeCount = 0L;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -55,5 +58,16 @@ public class PostEntity extends BaseTimeEntity {
 
     public void increaseViewCount() {
         this.viewCount++;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+
     }
 }

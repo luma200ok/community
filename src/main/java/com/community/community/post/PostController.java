@@ -2,6 +2,8 @@ package com.community.community.post;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -101,6 +103,11 @@ public class PostController {
     public ResponseEntity<Page<PostListResponse>> getAllPost(
             @Parameter(description = "검색 키워드 (제목 또는 내용에 포함된 단어)")
             @RequestParam(required = false) String keyword,
+            @Parameter(
+                    description = "페이지 정보 (예시 데이터를 참고하세요)",
+                    // Schema를 명시하고 example(단수!)을 사용
+                    example = "{\"page\": 0, \"size\": 10, \"sort\": \"createdAt,desc\"}"
+            )
             @PageableDefault(size = 10, sort = "createdAt",direction = Sort.Direction.DESC)
             Pageable pageable) {
         // 클라이언트가 page,size 안보내면 기본값 설정
