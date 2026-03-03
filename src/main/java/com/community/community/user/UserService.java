@@ -1,10 +1,13 @@
 package com.community.community.user;
 
 import com.community.community.config.JwtUtil;
+import com.community.community.config.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
 
 import static com.community.community.user.UserDto.*;
 
@@ -17,6 +20,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final JwtUtil jwtUtil;
+
+    private final RedisService redisService;
 
     //회원가입 기능
     public Long signUp(UserSignupRequest request) {
@@ -40,12 +45,13 @@ public class UserService {
         return userEntity.getId();
     }
 
-
-    // 로그인 기능
-    // @return 로그인 성공 시 회원 ID(PK) 반환
-    // 반환 타입을 Long -> String 으로 변경 (토큰 사용)
+    /**
+     * 로그인 기능
+     * @return 로그인 성공 시 회원 ID(PK) 반환
+     * 반환 타입을 로그인 성공 시 TokenResponse (Access, Refresh) 반환
+     */
     @Transactional(readOnly = true)
-    public String login(UserLoginRequest request) {
+    public TokenResponse login(UserLoginRequest request) {
         // 1. 아이디로 회원 조회
         UserEntity user = getValidUser(request.username());
 
@@ -54,8 +60,59 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        // 3. 아이디와 비밀번호 모두 일치 하여야 해당 회원의 ID 반환
-        return jwtUtil.createToken(user.getId(), user.getUsername());
+        // 3. Access Token & Refresh Token 발급
+        String accessToken = jwtUtil.createAccessToken(user.getId(), user.getUsername());
+        String refreshToken = jwtUtil.createRefreshToken(user.getId());
+
+        // 4. Refresh Token을 레디스에 저장
+        redisService.setValues(
+                "RT:" + user.getId(),
+                refreshToken,
+                Duration.ofDays(7));
+
+        // 5. 두 토큰을 DTO에 담아 반환
+        return new TokenResponse(accessToken, refreshToken);
+    }
+
+    /**
+     * 토큰 재발급 (Reissue)
+     */
+    @Transactional(readOnly = true)
+    public TokenResponse reissue(TokenReissueRequest request) {
+        String refreshToken = request.refreshToken();
+
+        // 1. 넘어온 Refresh Token 제차게 정상적인지(위조/만료) 검증
+        if (!jwtUtil.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않거나 만료된 Refresh Token 입니다.");
+        }
+
+        // 2. 토큰을 열어서 안에 있는 유저 번호(userId) 꺼내기
+        Long userId = jwtUtil.getClaims(refreshToken).get("userId", Long.class);
+
+        // 3. 레디스 금고에서 해당 유저 Refresh Token 꺼내기
+        String savedRefreshToken = redisService.getValues("RT:" + userId);
+
+        // 4. 금고에 없거나, 유저가 보낸 토큰과 다르면 에러 (탈취 방지)
+        if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
+            throw new IllegalArgumentException("레디스에 토큰이 없거나, 일치하지 않습니다. 다시 로그인하세요.");
+        }
+
+        // 5. 새 Access Token을 만들려면 username이 필요하므로 DB에서 유저 조회
+        UserEntity user = userRepository.findById(userId).orElseThrow(
+                () -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+
+        // 6. 검증 완료! 새로운 토큰 세트 발급
+        String newAccessToken = jwtUtil.createAccessToken(user.getId(), user.getUsername());
+        String newRefreshToken = jwtUtil.createRefreshToken(user.getId());
+
+        // 7. 레디스 금고 업데이트 (새 토큰으로 교체, 수명7일 연장)
+        redisService.setValues(
+                "RT:" + user.getId(),
+                newRefreshToken,
+                Duration.ofDays(7));
+
+        // 8. 새 토큰 반환
+        return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
     private void validateDuplicateUsername(String username) {

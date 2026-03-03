@@ -14,4 +14,15 @@ public class UserDto {
             String password
     ) {
     }
+
+    public record TokenResponse(
+            String accessToken,
+            String refreshToken
+    ) {
+    }
+
+    public record TokenReissueRequest(
+            String refreshToken
+    ) {
+    }
 }

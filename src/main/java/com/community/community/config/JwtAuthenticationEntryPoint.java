@@ -21,6 +21,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         // JSON 문자열로 에러 메시지 작성
         response.getWriter().write(
-                "{\"status\": 401, \"message\": \"로그인이 필요하거나 토큰이 유효하지 않습니다.\");");
+                "{\"status\": 401, \"message\": \"로그인이 필요하거나 토큰이 유효하지 않습니다.\"}");
     }
 }

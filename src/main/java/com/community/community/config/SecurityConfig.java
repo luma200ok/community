@@ -57,7 +57,8 @@ public class SecurityConfig {
                         // 💡 2. 통과 명단에 "/h2-console/**" 을 추가
                         .requestMatchers("/h2-console/**").permitAll()
 
-                        .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
+                        .requestMatchers("/api/users/signup", "/api/users/login","/api/users/reissue")
+                        .permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
                         // 스프링 부트가 내부적으로 호출하는 에러 URL 통과 허용
                         .requestMatchers("/error").permitAll()
