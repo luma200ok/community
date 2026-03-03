@@ -1,10 +1,12 @@
 package com.community.community.user;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,5 +47,16 @@ public class UserController {
         TokenResponse token = userService.reissue(request);
 
         return ResponseEntity.ok(token);
+    }
+
+    @Operation(summary = "로그아웃",
+            description = "서버에 저장된 Refresh Token을 삭제하여 로그아웃 처리합니다.")
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
+
+        userService.logout(userId);
+
+        return ResponseEntity.ok("성공적으로 로그아웃 되었습니다.");
     }
 }

@@ -115,6 +115,10 @@ public class UserService {
         return new TokenResponse(newAccessToken, newRefreshToken);
     }
 
+    public void logout(Long userId) {
+        redisService.deleteValues("RT" + userId);
+    }
+
     private void validateDuplicateUsername(String username) {
         userRepository.findByUsername(username).ifPresent(
                 m -> {throw new IllegalStateException("이미 존재하는 아이디입니다.");
