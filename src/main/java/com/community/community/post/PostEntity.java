@@ -44,11 +44,15 @@ public class PostEntity extends BaseTimeEntity {
     @JoinColumn(name = "user_id")
     private UserEntity userEntity;
 
+    @Column(length = 1000)
+    private String imageUrl;
+
     @Builder
-    public PostEntity(String title, String content, UserEntity userEntity) {
+    public PostEntity(String title, String content, UserEntity userEntity,String imageUrl) {
         this.title = title;
         this.content = content;
         this.userEntity = userEntity;
+        this.imageUrl = imageUrl;
     }
 
     public void update(String title, String content) {

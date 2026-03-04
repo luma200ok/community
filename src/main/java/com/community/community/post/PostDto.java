@@ -21,6 +21,7 @@ public class PostDto {
             Long id,
             String title,
             String content,
+            String imageUrl,
             String writer,
             Long viewCount,
             Long likeCount,
@@ -33,6 +34,7 @@ public class PostDto {
                     post.getId(),
                     post.getTitle(),
                     post.getContent(),
+                    post.getImageUrl(),
                     post.getUserEntity().getUsername(), // N+1 터지는 지점
                     post.getViewCount(),
                     post.getLikeCount(),

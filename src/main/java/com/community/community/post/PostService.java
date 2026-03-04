@@ -2,6 +2,7 @@ package com.community.community.post;
 
 import com.community.community.comment.CommentEntity;
 import com.community.community.comment.CommentRepository;
+import com.community.community.common.S3Service;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -24,22 +26,28 @@ public class PostService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
 
+    private final S3Service s3Service;
+
     /**
      * 게시글 작성
      */
-    public Long writePost(PostCreateRequest request, Long userId) {
+    public Long writePost(PostCreateRequest request, MultipartFile image, Long userId) {
         // 1. 글을 작성하는 사용자를 DB에서 조회
         UserEntity findUser = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 앟는 회원입니다."));
 
-        // 2. DTO의 User를 PostEntity 조합
+        // 2. 이미지가 있다면 S3에 업로드하고 URL을 받아옵니다.
+        String imageUrl = s3Service.uploadImage(image);
+
+        // 3. DTO의 User를 PostEntity 조합
         PostEntity post = PostEntity.builder()
                 .title(request.title())
                 .content(request.content())
                 .userEntity(findUser) // 유저 객체 맵핑
+                .imageUrl(imageUrl)
                 .build();
 
-        // 3. DB에 저장
+        // 4. DB에 저장
         postRepository.save(post);
 
         return post.getId();
@@ -100,17 +108,6 @@ public class PostService {
         // 3. 찾은 게시글을 DB에서 삭제.
         postRepository.delete(post);
     }
-
-    /*
-    @Transactional(readOnly = true)
-    public List<PostListResponse> getAllPost() {
-        // 1. 게시글 List 조회
-        List<PostEntity> posts = postRepository.findAll();
-
-        return posts.stream()
-                .map(PostListResponse::from).toList();
-    }
-    */
 
     /**
      * 게시글 전체 조회
