@@ -73,18 +73,22 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "게시글 수정",
-            description = "특정 게시글의 제목과 내용을 수정합니다.\n\n" +
+    @Operation(summary = "게시글 수정 (이미지 교체 포함)",
+            description = "특정 게시글의 제목과 내용 및 이미지를 수정합니다.\n\n" +
                     "**요청 데이터:** 수정할 제목(`title`)과 내용(`content`)\n" +
                     "**권한:** JWT 토큰이 필요하며, **게시글 작성자 본인만** 수정할 수 있습니다." +
                     " (작성자가 아닐 경우 `403 Forbidden` 반환)")
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}",
+    consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> updatePost(
             @PathVariable Long id,
-            @RequestBody PostUpdateRequest request,
+            // @ModelAttribute를 사용하여 텍스트 데이터와 파일을 동시에 받습니다.
+            @Parameter(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = org.springframework.http.MediaType.APPLICATION_JSON_VALUE))
+            @RequestPart(value = "request") PostUpdateRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        postService.updatePost(id, request, userId);
+        postService.updatePost(id, request,image, userId);
 
         return ResponseEntity.ok("게시글 수정이 완료되었습니다.");
     }

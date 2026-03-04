@@ -45,4 +45,20 @@ public class S3Service {
         }
     }
 
+    public void deleteFile(String fileUrl) {
+        if (fileUrl == null || fileUrl.isEmpty()) {
+            return;
+        }
+        try {
+            String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+
+            s3Template.deleteObject(bucketName, fileName);
+            System.out.println("S3 파일 삭제 완료: " + fileName);
+        } catch (Exception e) {
+            System.out.println("S3 파일 삭제 실패: " + e.getMessage());
+        }
+
+
+    }
+
 }

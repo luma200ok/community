@@ -60,6 +60,10 @@ public class PostEntity extends BaseTimeEntity {
         this.content = content;
     }
 
+    public void updateImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public void increaseViewCount() {
         this.viewCount++;
     }
@@ -72,6 +76,5 @@ public class PostEntity extends BaseTimeEntity {
         if (this.likeCount > 0) {
             this.likeCount--;
         }
-
     }
 }

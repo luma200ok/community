@@ -26,6 +26,7 @@ public class PostDto {
             Long viewCount,
             Long likeCount,
             LocalDateTime createdAt,
+            LocalDateTime updatedAt,
             List<CommentResponse> comments // 댓글 리스트
     ) {
         public static PostDetailResponse from(
@@ -39,6 +40,7 @@ public class PostDto {
                     post.getViewCount(),
                     post.getLikeCount(),
                     post.getCreatedAt(),
+                    post.getUpdatedAt(),
                     comments.stream().map(CommentResponse::from).toList()
             );
         }
@@ -50,7 +52,8 @@ public class PostDto {
             String writer,
             Long viewCount,
             Long likeCount,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
     ) {
         public static PostListResponse from(PostEntity post) {
             return new PostListResponse(
@@ -59,7 +62,8 @@ public class PostDto {
                     post.getUserEntity().getUsername(),
                     post.getViewCount(),
                     post.getLikeCount(),
-                    post.getCreatedAt()
+                    post.getCreatedAt(),
+                    post.getUpdatedAt()
             );
         }
     }

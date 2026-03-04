@@ -74,10 +74,10 @@ public class PostService {
     }
 
     /**
-     *  게시글 ID를 통한 수정
-     *  작성자와 수정 요청자 userId 검증
+     * 게시글 ID를 통한 수정
+     * 작성자와 수정 요청자 userId 검증
      */
-    public void updatePost(Long id, PostUpdateRequest request, Long userId) {
+    public void updatePost(Long id, PostUpdateRequest request, MultipartFile image, Long userId) {
         // 1. 수정할 게시글을 DB에서 조회
         PostEntity post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
@@ -87,15 +87,27 @@ public class PostService {
             throw new AccessDeniedException("작성자만 수정할 수 있습니다.");
         }
 
-        // 3. 통과시 수정
+        // 3. 이미지 교체 로직
+        // 새로운 사진 파일이 들어온 경우에만 실행
+        if (image != null && !image.isEmpty()) {
+            if (post.getImageUrl() != null) {
+                s3Service.deleteFile(post.getImageUrl());
+            }
+            String newImageUrl = s3Service.uploadImage(image);
+
+            post.updateImageUrl(newImageUrl);
+        }
+
+        // 4. 통과시 수정
         post.update(request.title(), request.content());
     }
 
     /**
      * 게시글 ID 통한 삭제
      * 작성자와 삭제 요청자 userId 검증
+     * 게시글을 DB에서 삭제전 imageUrl이 있다면 S3에서도 지우도록 코드 연결
      */
-    public void deletePost(Long id,Long userId) {
+    public void deletePost(Long id, Long userId) {
         // 1. 삭제할 게시글을 DB에서 조회
         PostEntity post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
@@ -105,7 +117,12 @@ public class PostService {
             throw new AccessDeniedException("작성자만 삭제할 수 있습니다.");
         }
 
-        // 3. 찾은 게시글을 DB에서 삭제.
+        // 3. S3에 저장된 사진이 있다면 삭제 시도
+        if (post.getImageUrl() != null) {
+            s3Service.deleteFile(post.getImageUrl());
+        }
+
+        // 4. 찾은 게시글을 DB에서 삭제.
         postRepository.delete(post);
     }
 
