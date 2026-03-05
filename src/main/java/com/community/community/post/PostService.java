@@ -3,19 +3,25 @@ package com.community.community.post;
 import com.community.community.comment.CommentEntity;
 import com.community.community.comment.CommentRepository;
 import com.community.community.common.S3Service;
+import com.community.community.exception.CustomException;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-import static com.community.community.post.PostDto.*;
+import static com.community.community.exception.ErrorCode.EDIT_ACCESS_DENIED;
+import static com.community.community.exception.ErrorCode.POST_NOT_FOUND;
+import static com.community.community.exception.ErrorCode.USER_NOT_FOUND;
+import static com.community.community.post.PostDto.PostCreateRequest;
+import static com.community.community.post.PostDto.PostDetailResponse;
+import static com.community.community.post.PostDto.PostListResponse;
+import static com.community.community.post.PostDto.PostUpdateRequest;
 
 @Service
 @Transactional
@@ -35,7 +41,7 @@ public class PostService {
     public Long writePost(PostCreateRequest request, List<MultipartFile> images, Long userId) {
         // 1. 작성자 조회
         UserEntity findUser = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 앟는 회원입니다."));
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
         // 2. 게시글(Post) 먼저 생성 및 DB에 저장 (사진은 아직 업로드X)
         PostEntity post = PostEntity.builder()
@@ -71,7 +77,7 @@ public class PostService {
     public PostDetailResponse getPost(Long id) {
         // 1. 글 번호를 통해 DB에서 게시글 조회. 없으면 에러
         PostEntity post = postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
+                .orElseThrow(() -> new CustomException(POST_NOT_FOUND));
 
         // 2. 게시글 조회시 조회수 1 증가
         post.increaseViewCount();
@@ -90,11 +96,11 @@ public class PostService {
     public void updatePost(Long id, PostUpdateRequest request, List<MultipartFile> images, Long userId) {
         // 1. 수정할 게시글을 DB에서 조회
         PostEntity post = postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
+                .orElseThrow(() -> new CustomException(POST_NOT_FOUND));
 
         // 2. 작성자와 수정 요청자 일치 검증
         if (!post.getUserEntity().getId().equals(userId)) {
-            throw new AccessDeniedException("작성자만 수정할 수 있습니다.");
+            throw new CustomException(EDIT_ACCESS_DENIED);
         }
 
         // 3. 이미지 교체 로직
@@ -135,11 +141,11 @@ public class PostService {
     public void deletePost(Long id, Long userId) {
         // 1. 삭제할 게시글을 DB에서 조회
         PostEntity post = postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
+                .orElseThrow(() -> new CustomException(POST_NOT_FOUND));
 
         // 2. 작성자와 삭제 요청자 일치 검증
         if (!post.getUserEntity().getId().equals(userId)) {
-            throw new AccessDeniedException("작성자만 삭제할 수 있습니다.");
+            throw new CustomException(EDIT_ACCESS_DENIED);
         }
 
         // 3. S3에 저장된 사진이 있다면 for문을 돌리면서 삭제 시도

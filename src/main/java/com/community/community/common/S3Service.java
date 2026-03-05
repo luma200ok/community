@@ -1,5 +1,7 @@
 package com.community.community.common;
 
+import com.community.community.exception.CustomException;
+import com.community.community.exception.ErrorCode;
 import io.awspring.cloud.s3.S3Template;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +13,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+
+import static com.community.community.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +36,7 @@ public class S3Service {
 
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || originalFilename.isBlank()) {
-            throw new IllegalArgumentException("파일 이름이 없습니다.");
+            throw new CustomException(FILE_NOT_FOUND);
         }
 
         // S3에 올리기 전에 무조건 확장자 검사부터
@@ -83,7 +87,7 @@ public class S3Service {
         List<String> allowedExtensionList = Arrays.asList("jpg", "jpeg", "png", "gif", "webp", "pdf");
 
         if (!allowedExtensionList.contains(extension)) {
-            throw new IllegalArgumentException("허용되지 않는 파일 확장자 입니다. (허용:jpg, jpeg, png, gif, webp,pdf)");
+            throw new CustomException(INVALID_FILE_EXTENSION);
         }
     }
 }

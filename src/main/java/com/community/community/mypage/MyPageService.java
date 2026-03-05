@@ -1,10 +1,10 @@
 package com.community.community.mypage;
 
-import com.community.community.comment.CommentDto;
 import com.community.community.comment.CommentRepository;
+import com.community.community.exception.CustomException;
+import com.community.community.exception.ErrorCode;
 import com.community.community.like.LikeEntity;
 import com.community.community.like.LikeRepository;
-import com.community.community.post.PostDto;
 import com.community.community.post.PostRepository;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
@@ -35,10 +35,10 @@ public class MyPageService {
      */
     public void updatePassword(Long userId, PasswordUpdateRequest request) {
         UserEntity user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                () -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
         String encodedNewPassword = passwordEncoder.encode(request.newPassword());

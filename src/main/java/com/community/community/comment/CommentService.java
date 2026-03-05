@@ -1,12 +1,12 @@
 package com.community.community.comment;
 
-import com.community.community.config.JwtUtil;
+import com.community.community.exception.CustomException;
+import com.community.community.exception.ErrorCode;
 import com.community.community.post.PostEntity;
 import com.community.community.post.PostRepository;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,16 +47,16 @@ public class CommentService {
             Long postId, Long commentId, CommentUpdateRequest request, Long userId) {
         // 1. 수정할 댓글 DB에서 조회
         CommentEntity comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.COMMENT_NOT_FOUND));
 
         // 2. 주소 postId와 실제 postId 일치 검증
         if (!comment.getPostEntity().getId().equals(postId)) {
-            throw new IllegalArgumentException("해당 게시글의 댓글이 아닙니다.");
+            throw new CustomException(ErrorCode.COMMENT_MISMATCH);
         }
 
         // 3. 댓글 작성자와 수정 요청자의 ID 일치 검증
         if (!comment.getUserEntity().getId().equals(userId)) {
-            throw new AccessDeniedException("작성자만 수정할 수 있습니다.");
+            throw new CustomException(ErrorCode.EDIT_ACCESS_DENIED);
         }
         // 4. 내용 변경 (더티 체킹)
         comment.update(request.content());
@@ -65,16 +65,16 @@ public class CommentService {
     public void deleteComment(Long postId, Long commentId, Long userId) {
         // 1. 삭제할 댓글 DB에서 조회
         CommentEntity comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 댓글입니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.COMMENT_NOT_FOUND));
 
         // 2. 주소 postId와 실제 postId 일치 검증
         if (!comment.getPostEntity().getId().equals(postId)) {
-            throw new IllegalArgumentException("해당 게시글의 댓글이 아닙니다.");
+            throw new CustomException(ErrorCode.COMMENT_MISMATCH);
         }
 
         // 3. 댓글 작성자와 삭제 요청자의 ID 일치 검증
         if (!comment.getUserEntity().getId().equals(userId)) {
-            throw new IllegalArgumentException("작성자만 삭제할 수 있습니다.");
+            throw new CustomException(ErrorCode.EDIT_ACCESS_DENIED);
         }
 
         // 4. DB에서 삭제

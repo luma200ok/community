@@ -51,8 +51,7 @@ public class CommentController {
             @PathVariable Long postId,
             @PathVariable Long commentId,
             @RequestBody CommentUpdateRequest request,
-            @Parameter(hidden = true) @AuthenticationPrincipal Long userId
-    ) {
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
         commentService.updateComment(postId,commentId, request, userId);
         return ResponseEntity.ok("댓글 수정이 완료되었습니다.");
     }
@@ -61,8 +60,7 @@ public class CommentController {
             summary = "댓글 삭제",
             description = "작성한 댓글을 삭제합니다.\n\n" +
                     "**권한:** JWT 토큰이 필요하며, **댓글 작성자 본인만** 삭제할 수 있습니다." +
-                    " (작성자가 아닐 경우 `403 Forbidden` 반환)"
-    )
+                    " (작성자가 아닐 경우 `403 Forbidden` 반환)")
     @DeleteMapping("/{commentId}")
     public ResponseEntity<String> deleteComment(
             @PathVariable Long postId,
