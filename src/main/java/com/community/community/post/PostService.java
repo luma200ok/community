@@ -168,7 +168,7 @@ public class PostService {
         if (!post.getUserEntity().getId().equals(userId)) {
             throw new CustomException(EDIT_ACCESS_DENIED);
         }
-
+        /*
         // 3. S3에 저장된 사진이 있다면 for문을 돌리면서 삭제 시도
         if (post.getImages() != null && !post.getImages().isEmpty()) {
             for (PostImageEntity image : post.getImages()) {
@@ -178,6 +178,8 @@ public class PostService {
 
         // 4. 찾은 게시글을 DB에서 삭제.
         postRepository.delete(post);
+         */
+        post.softDelete();
     }
 
     /**

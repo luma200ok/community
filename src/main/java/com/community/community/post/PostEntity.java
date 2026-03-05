@@ -17,8 +17,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +26,7 @@ import java.util.List;
 @Getter
 @Table(name = "post")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLRestriction("is_deleted = false")
 public class PostEntity extends BaseTimeEntity {
 
     @Id
@@ -43,6 +44,9 @@ public class PostEntity extends BaseTimeEntity {
 
     @Column(nullable = false)
     private Long likeCount = 0L;
+
+    @Column(nullable = false)
+    private boolean isDeleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -75,5 +79,9 @@ public class PostEntity extends BaseTimeEntity {
         if (this.likeCount > 0) {
             this.likeCount--;
         }
+    }
+
+    public void softDelete() {
+        this.isDeleted = true;
     }
 }
