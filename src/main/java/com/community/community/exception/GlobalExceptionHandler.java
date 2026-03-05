@@ -52,4 +52,14 @@ public class GlobalExceptionHandler {
         ErrorResponse response = new ErrorResponse(errorCode.getHttpStatus().value(), errorCode.getMessage());
         return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
     }
+
+    // 6. @Valid 유효성 검사 실패 시 발생하는 에러 처리
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationException(org.springframework.web.bind.MethodArgumentNotValidException e) {
+        // DTO에 적어둔 message("이메일 형식이 올바르지 않습니다." 등)를 쏙 빼옵니다.
+        String errorMessage = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+
+        ErrorResponse response = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), errorMessage);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 }

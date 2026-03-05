@@ -3,6 +3,7 @@ package com.community.community.user;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody UserSignupRequest request) {
+    public ResponseEntity<String> signup(@Valid @RequestBody UserSignupRequest request) {
         Long userId = userService.signUp(request);
         return ResponseEntity.ok("가입 완료");
     }
