@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -67,10 +68,16 @@ public class PostController {
             description = "게시글 ID를 통해 특정 게시글의 상세 정보와 댓글 목록을 조회합니다.\n\n" +
                     "**요청 데이터:** 조회할 게시글 번호(`id`)\n")
     @GetMapping("/{id}")
-    public ResponseEntity<PostDetailResponse> getPost(@PathVariable Long id) {
+    public ResponseEntity<PostDetailResponse> getPost(
+            @PathVariable Long id,
+            HttpServletRequest request,
+            // 비로그인 유저도 접근 가능하므로 (required = false) 처럼 동작하여 null이 들어올수 있음
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
+
+        String clientIp = request.getRemoteAddr();
 
         // URL에서 뽑아낸 ID값을 서비스에 넘겨 DTO 받음
-        PostDetailResponse response = postService.getPost(id);
+        PostDetailResponse response = postService.getPost(id, clientIp, userId);
 
         return ResponseEntity.ok(response);
     }

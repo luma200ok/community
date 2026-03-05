@@ -3,7 +3,9 @@ package com.community.community.post;
 import com.community.community.comment.CommentEntity;
 import com.community.community.comment.CommentRepository;
 import com.community.community.common.S3Service;
+import com.community.community.config.RedisService;
 import com.community.community.exception.CustomException;
+import com.community.community.like.LikeRepository;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.util.List;
 
 import static com.community.community.exception.ErrorCode.EDIT_ACCESS_DENIED;
@@ -32,6 +35,8 @@ public class PostService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final PostImageRepository postImageRepository;
+    private final LikeRepository likeRepository;
+    private final RedisService redisService;
 
     private final S3Service s3Service;
 
@@ -74,19 +79,35 @@ public class PostService {
      * Transactional readOnly -> 조회수 증가 로직 때문에 주석처리
      */
 //    @Transactional(readOnly = true)
-    public PostDetailResponse getPost(Long id) {
+    public PostDetailResponse getPost(Long id, String clientIp, Long userId) {
         // 1. 글 번호를 통해 DB에서 게시글 조회. 없으면 에러
         PostEntity post = postRepository.findById(id)
                 .orElseThrow(() -> new CustomException(POST_NOT_FOUND));
 
-        // 2. 게시글 조회시 조회수 1 증가
-        post.increaseViewCount();
+        // 2. 조회수 어뷰징 방지 로직 (Redis 활용)
+        // 레디스에 저장할 키 이름 생성 ("view:post:1:ip:127.0.0.1")
+        String redisKey = "view:post:" + id + ":ip:" + clientIp;
+        // 레디스 금고에 해당 키가 존재하는지 확인
+        String viewed = redisService.getValues(redisKey);
+
+        if (viewed == null) {
+            // 금고에 없다 최초 조회
+            post.increaseViewCount();
+
+            redisService.setValues(redisKey,"viewed", Duration.ofHours(24));
+        }
+
+        // 이 유저가 좋아요를 눌렀는지 검증
+        boolean isLiked = false;
+        if (userId != null) {
+            isLiked = likeRepository.existsByUserEntity_IdAndPostEntity_Id(userId, id);
+        }
 
         // 3. 게시글에 달린 댓글 가져오기
         List<CommentEntity> comments = commentRepository.findByPostEntityId(id);
 
         // 4. 찾은 Entity를 DTO로 변환해서 반환
-        return PostDetailResponse.from(post, comments);
+        return PostDetailResponse.from(post, comments, isLiked);
     }
 
     /**
@@ -177,7 +198,6 @@ public class PostService {
             posts = postRepository.findByTitleContainingOrContentContaining(
                     keyword, keyword, pageable);
         }
-
         return posts.map(PostListResponse::from);
     }
 }

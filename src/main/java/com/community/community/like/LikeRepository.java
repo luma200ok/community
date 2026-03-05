@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface LikeRepository extends JpaRepository<LikeEntity, Long> {
@@ -16,4 +17,5 @@ public interface LikeRepository extends JpaRepository<LikeEntity, Long> {
     // 특정 유저가 좋아요 누른 내역 조회 (이걸 통해 게시글에 접근)
     Page<LikeEntity> findByUserEntity_Id(Long userId, Pageable pageable);
 
+    boolean existsByUserEntity_IdAndPostEntity_Id(Long userId, Long postId);
 }

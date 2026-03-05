@@ -25,6 +25,7 @@ public class PostDto {
             String writer,
             Long viewCount,
             Long likeCount,
+            boolean isLiked,
             // 1. 단일 -> List imageUrls로 변경
             List<String> imageUrls,
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
@@ -35,7 +36,7 @@ public class PostDto {
             List<CommentResponse> comments // 댓글 리스트
     ) {
         public static PostDetailResponse from(
-                PostEntity post, List<CommentEntity> comments) {
+                PostEntity post, List<CommentEntity> comments, boolean isLiked) {
             // 2. PostEntity에 매달린 PostImageEntity들에서 URL만 쏙쏙 뽑아내어 리스트로
             List<String> urls = post.getImages().stream()
                     .map(PostImageEntity::getImageUrl)
@@ -48,6 +49,7 @@ public class PostDto {
                     post.getUserEntity().getUsername(), // N+1 터지는 지점
                     post.getViewCount(),
                     post.getLikeCount(),
+                    isLiked,
                     urls, // 3. 뽑아낸 리스트 삽입
                     post.getCreatedAt(),
                     post.getUpdatedAt(),
