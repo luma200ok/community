@@ -2,6 +2,7 @@ package com.community.community.post;
 
 import com.community.community.comment.CommentDto;
 import com.community.community.comment.CommentEntity;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,7 +27,10 @@ public class PostDto {
             Long likeCount,
             // 1. 단일 -> List imageUrls로 변경
             List<String> imageUrls,
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
             LocalDateTime createdAt,
+
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
             LocalDateTime updatedAt,
             List<CommentResponse> comments // 댓글 리스트
     ) {
@@ -58,7 +62,9 @@ public class PostDto {
             String writer,
             Long viewCount,
             Long likeCount,
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
             LocalDateTime createdAt,
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
             LocalDateTime updatedAt
     ) {
         public static PostListResponse from(PostEntity post) {
