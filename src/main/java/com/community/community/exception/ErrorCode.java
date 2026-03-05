@@ -17,13 +17,17 @@ public enum ErrorCode {
     // 💡 404 NOT_FOUND (찾을 수 없음)
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 게시글입니다."),
 
+    DUPLICATE_USERNAME(HttpStatus.CONFLICT, "이미 존재하는 아이디입니다."),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "이미 가입된 이메일입니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 토큰입니다."),
     INVALID_PASSWORD(HttpStatus.NOT_FOUND, "비밀번호가 일치하지 않습니다."),
 
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다."),
     COMMENT_MISMATCH(HttpStatus.BAD_REQUEST, "해당 게시글의 댓글이 아닙니다."),
 
-    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 파일입니다.");
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 파일입니다."),
+    FILE_EXTENSION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 확장자입니다.");
 
     // 필요한 에러가 생길 때마다 여기에 한 줄씩 추가만 하면 됩니다!
 

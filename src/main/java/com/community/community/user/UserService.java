@@ -2,6 +2,8 @@ package com.community.community.user;
 
 import com.community.community.config.JwtUtil;
 import com.community.community.config.RedisService;
+import com.community.community.exception.CustomException;
+import com.community.community.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -57,7 +59,7 @@ public class UserService {
 
         // 2. 비밀번호 일치 여부 확인 (현시점 평문 비교, 차후 암호화 비교 업그레이드 예정)
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
 
         // 3. Access Token & Refresh Token 발급
@@ -83,7 +85,7 @@ public class UserService {
 
         // 1. 넘어온 Refresh Token 제차게 정상적인지(위조/만료) 검증
         if (!jwtUtil.validateToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않거나 만료된 Refresh Token 입니다.");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
         // 2. 토큰을 열어서 안에 있는 유저 번호(userId) 꺼내기
@@ -94,12 +96,12 @@ public class UserService {
 
         // 4. 금고에 없거나, 유저가 보낸 토큰과 다르면 에러 (탈취 방지)
         if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
-            throw new IllegalArgumentException("레디스에 토큰이 없거나, 일치하지 않습니다. 다시 로그인하세요.");
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
         // 5. 새 Access Token을 만들려면 username이 필요하므로 DB에서 유저 조회
         UserEntity user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                () -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 6. 검증 완료! 새로운 토큰 세트 발급
         String newAccessToken = jwtUtil.createAccessToken(user.getId(), user.getUsername());
@@ -116,23 +118,23 @@ public class UserService {
     }
 
     public void logout(Long userId) {
-        redisService.deleteValues("RT" + userId);
+        redisService.deleteValues("RT:" + userId);
     }
 
     private void validateDuplicateUsername(String username) {
         userRepository.findByUsername(username).ifPresent(
-                m -> {throw new IllegalStateException("이미 존재하는 아이디입니다.");
+                m -> {throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
         });
     }
 
     private void validateDuplicateEmail(String email) {
         userRepository.findByEmail(email).ifPresent(
-                m -> {throw new IllegalStateException("이미 가입된 이메일입니다.");
+                m -> {throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         });
     }
 
     private UserEntity getValidUser(String username) {
         return userRepository.findByUsername(username).orElseThrow(
-                () -> new IllegalArgumentException("존재하지 않는 아이디입니다."));
+                () -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 }

@@ -1,7 +1,6 @@
 package com.community.community.common;
 
 import com.community.community.exception.CustomException;
-import com.community.community.exception.ErrorCode;
 import io.awspring.cloud.s3.S3Template;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -80,7 +79,7 @@ public class S3Service {
     private void validateImageFileExtension(String filename) {
         int lastDotIndex = filename.lastIndexOf(".");
         if (lastDotIndex == -1) {
-            throw new IllegalArgumentException("파일 확장자가 없습니다.");
+            throw new CustomException(FILE_EXTENSION_NOT_FOUND);
         }
 
         String extension = filename.substring(lastDotIndex + 1).toLowerCase(Locale.ROOT);
