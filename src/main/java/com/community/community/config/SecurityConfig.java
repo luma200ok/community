@@ -64,6 +64,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         // 스웨거 관련 주소 통과 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // HTML, CSS ,JS 파일 무사통과
+                        .requestMatchers("/", "/index.html", "/favicon.ico", "/css/**", "/js/**").permitAll()
 
                         .anyRequest().authenticated()
                 )

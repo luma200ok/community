@@ -1,0 +1,13 @@
+body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+.section { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 8px; background-color: #f9f9f9; }
+.post-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 8px; background-color: white; cursor: pointer; transition: 0.2s; }
+.post-card:hover { background-color: #f1f1f1; transform: translateY(-2px); }
+.post-title { font-weight: bold; font-size: 1.2em; color: #333; }
+.post-meta { font-size: 0.9em; color: #777; margin-top: 5px; }
+input, textarea, button { margin-bottom: 10px; width: 100%; box-sizing: border-box; padding: 8px; }
+button { cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; }
+button:hover { background-color: #0056b3; }
+.comment-box { border-bottom: 1px solid #ddd; padding: 10px 0; }
+.link-group { text-align: center; margin-top: 15px; font-size: 0.9em; color: #555; }
+.link-text { cursor: pointer; color: #007bff; text-decoration: underline; margin: 0 5px; }
+.link-text:hover { color: #0056b3; font-weight: bold; }
