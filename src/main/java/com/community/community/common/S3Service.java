@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -24,11 +27,18 @@ public class S3Service {
      */
     public String uploadImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            return null; // 첨부된 파일이 없으면 그냥 null 반환
+            return null;
         }
 
-        // 1. 파일 이름 중복을 막기 위해 겹치지 않는 랜덤 이름(UUID) 생성
         String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isBlank()) {
+            throw new IllegalArgumentException("파일 이름이 없습니다.");
+        }
+
+        // S3에 올리기 전에 무조건 확장자 검사부터
+        validateImageFileExtension(file.getOriginalFilename());
+
+        // 1. 파일 이름 중복을 막기 위해 겹치지 않는 랜덤 이름(UUID) 생성
         String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         String randomFileName = UUID.randomUUID().toString() + extension;
 
@@ -45,6 +55,9 @@ public class S3Service {
         }
     }
 
+    /**
+     * 업로드한 이미지 삭제
+     */
     public void deleteFile(String fileUrl) {
         if (fileUrl == null || fileUrl.isEmpty()) {
             return;
@@ -57,8 +70,20 @@ public class S3Service {
         } catch (Exception e) {
             System.out.println("S3 파일 삭제 실패: " + e.getMessage());
         }
-
-
     }
 
+    // 1. 파일 확장자를 검사하는 메서드
+    private void validateImageFileExtension(String filename) {
+        int lastDotIndex = filename.lastIndexOf(".");
+        if (lastDotIndex == -1) {
+            throw new IllegalArgumentException("파일 확장자가 없습니다.");
+        }
+
+        String extension = filename.substring(lastDotIndex + 1).toLowerCase(Locale.ROOT);
+        List<String> allowedExtensionList = Arrays.asList("jpg", "jpeg", "png", "gif", "webp", "pdf");
+
+        if (!allowedExtensionList.contains(extension)) {
+            throw new IllegalArgumentException("허용되지 않는 파일 확장자 입니다. (허용:jpg, jpeg, png, gif, webp,pdf)");
+        }
+    }
 }

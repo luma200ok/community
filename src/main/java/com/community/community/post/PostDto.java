@@ -21,24 +21,30 @@ public class PostDto {
             Long id,
             String title,
             String content,
-            String imageUrl,
             String writer,
             Long viewCount,
             Long likeCount,
+            // 1. 단일 -> List imageUrls로 변경
+            List<String> imageUrls,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
             List<CommentResponse> comments // 댓글 리스트
     ) {
         public static PostDetailResponse from(
                 PostEntity post, List<CommentEntity> comments) {
+            // 2. PostEntity에 매달린 PostImageEntity들에서 URL만 쏙쏙 뽑아내어 리스트로
+            List<String> urls = post.getImages().stream()
+                    .map(PostImageEntity::getImageUrl)
+                    .toList();
+
             return new PostDetailResponse(
                     post.getId(),
                     post.getTitle(),
                     post.getContent(),
-                    post.getImageUrl(),
                     post.getUserEntity().getUsername(), // N+1 터지는 지점
                     post.getViewCount(),
                     post.getLikeCount(),
+                    urls, // 3. 뽑아낸 리스트 삽입
                     post.getCreatedAt(),
                     post.getUpdatedAt(),
                     comments.stream().map(CommentResponse::from).toList()

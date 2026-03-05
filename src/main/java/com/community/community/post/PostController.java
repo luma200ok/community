@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 import static com.community.community.post.PostDto.PostCreateRequest;
 import static com.community.community.post.PostDto.PostDetailResponse;
 import static com.community.community.post.PostDto.PostListResponse;
@@ -53,10 +55,10 @@ public class PostController {
             @Parameter(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = org.springframework.http.MediaType.APPLICATION_JSON_VALUE))
             @RequestPart(value = "request") PostCreateRequest request,
             // 3. 이미지는 없을 수도 있으니 required = false
-            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        Long postId = postService.writePost(request, image, userId);
+        Long postId = postService.writePost(request, images, userId);
 
         return ResponseEntity.ok("게시글 작성이 완료되었습니다. 글 번호:" + postId);
     }
@@ -78,18 +80,15 @@ public class PostController {
                     "**요청 데이터:** 수정할 제목(`title`)과 내용(`content`)\n" +
                     "**권한:** JWT 토큰이 필요하며, **게시글 작성자 본인만** 수정할 수 있습니다." +
                     " (작성자가 아닐 경우 `403 Forbidden` 반환)")
-    @PutMapping(value = "/{id}",
-    consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> updatePost(
             @PathVariable Long id,
-            // @ModelAttribute를 사용하여 텍스트 데이터와 파일을 동시에 받습니다.
             @Parameter(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = org.springframework.http.MediaType.APPLICATION_JSON_VALUE))
             @RequestPart(value = "request") PostUpdateRequest request,
-            @RequestPart(value = "image", required = false) MultipartFile image,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
-        postService.updatePost(id, request,image, userId);
-
+        postService.updatePost(id, request,images, userId);
         return ResponseEntity.ok("게시글 수정이 완료되었습니다.");
     }
 

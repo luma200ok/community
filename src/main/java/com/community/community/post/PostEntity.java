@@ -2,6 +2,7 @@ package com.community.community.post;
 
 import com.community.community.common.BaseTimeEntity;
 import com.community.community.user.UserEntity;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -17,6 +19,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -44,24 +48,19 @@ public class PostEntity extends BaseTimeEntity {
     @JoinColumn(name = "user_id")
     private UserEntity userEntity;
 
-    @Column(length = 1000)
-    private String imageUrl;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostImageEntity> images = new ArrayList<>();
 
     @Builder
-    public PostEntity(String title, String content, UserEntity userEntity,String imageUrl) {
+    public PostEntity(String title, String content, UserEntity userEntity, String imageUrl) {
         this.title = title;
         this.content = content;
         this.userEntity = userEntity;
-        this.imageUrl = imageUrl;
     }
 
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
-    }
-
-    public void updateImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
     }
 
     public void increaseViewCount() {

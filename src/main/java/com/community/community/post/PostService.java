@@ -25,31 +25,41 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
+    private final PostImageRepository postImageRepository;
 
     private final S3Service s3Service;
 
     /**
-     * 게시글 작성
+     * 게시글 작성 (다중 이미지 버전)
      */
-    public Long writePost(PostCreateRequest request, MultipartFile image, Long userId) {
-        // 1. 글을 작성하는 사용자를 DB에서 조회
+    public Long writePost(PostCreateRequest request, List<MultipartFile> images, Long userId) {
+        // 1. 작성자 조회
         UserEntity findUser = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 앟는 회원입니다."));
 
-        // 2. 이미지가 있다면 S3에 업로드하고 URL을 받아옵니다.
-        String imageUrl = s3Service.uploadImage(image);
-
-        // 3. DTO의 User를 PostEntity 조합
+        // 2. 게시글(Post) 먼저 생성 및 DB에 저장 (사진은 아직 업로드X)
         PostEntity post = PostEntity.builder()
                 .title(request.title())
                 .content(request.content())
                 .userEntity(findUser) // 유저 객체 맵핑
-                .imageUrl(imageUrl)
                 .build();
-
-        // 4. DB에 저장
         postRepository.save(post);
 
+        // 3. 첨부된 이미지들이 있다면 for문으로 하나씩 처리
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile image : images) {
+                String imageUrl = s3Service.uploadImage(image);
+
+                if (imageUrl != null) {
+                    // S3 주소와 방금 만든 게시글(Post)을 엮어 사진 DB에 저장
+                    PostImageEntity postImage = PostImageEntity.builder()
+                            .imageUrl(imageUrl)
+                            .post(post)
+                            .build();
+                    postImageRepository.save(postImage);
+                }
+            }
+        }
         return post.getId();
     }
 
@@ -77,7 +87,7 @@ public class PostService {
      * 게시글 ID를 통한 수정
      * 작성자와 수정 요청자 userId 검증
      */
-    public void updatePost(Long id, PostUpdateRequest request, MultipartFile image, Long userId) {
+    public void updatePost(Long id, PostUpdateRequest request, List<MultipartFile> images, Long userId) {
         // 1. 수정할 게시글을 DB에서 조회
         PostEntity post = postRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
@@ -89,16 +99,31 @@ public class PostService {
 
         // 3. 이미지 교체 로직
         // 새로운 사진 파일이 들어온 경우에만 실행
-        if (image != null && !image.isEmpty()) {
-            if (post.getImageUrl() != null) {
-                s3Service.deleteFile(post.getImageUrl());
+        if (images != null && !images.isEmpty()) {
+            // 3-1. 기존 S3 파일 전체 삭제
+            for (PostImageEntity oldImage : post.getImages()) {
+                s3Service.deleteFile(oldImage.getImageUrl());
             }
-            String newImageUrl = s3Service.uploadImage(image);
-
-            post.updateImageUrl(newImageUrl);
+            // 3-2. DB에서 기존 파일 데이터 지우기
+            // PostEntity에 orphanRemoval = true가 켜져 사용 시 필요 없음.
+            // postImageRepository.deleteByPostId(post.getId());
+            post.getImages().clear();
+            // 3-3. 새 파일을 S3에 업로드하고 DB에 저장
+            for (MultipartFile image : images) {
+                if (image != null && !image.isEmpty()) {
+                    String newImageUrl = s3Service.uploadImage(image);
+                    if (newImageUrl != null) {
+                        PostImageEntity postImage = PostImageEntity.builder()
+                                .imageUrl(newImageUrl)
+                                .post(post)
+                                .build();
+                        postImageRepository.save(postImage);
+                    }
+                }
+            }
         }
 
-        // 4. 통과시 수정
+        // 4. 텍스트 내용 수정
         post.update(request.title(), request.content());
     }
 
@@ -117,9 +142,11 @@ public class PostService {
             throw new AccessDeniedException("작성자만 삭제할 수 있습니다.");
         }
 
-        // 3. S3에 저장된 사진이 있다면 삭제 시도
-        if (post.getImageUrl() != null) {
-            s3Service.deleteFile(post.getImageUrl());
+        // 3. S3에 저장된 사진이 있다면 for문을 돌리면서 삭제 시도
+        if (post.getImages() != null && !post.getImages().isEmpty()) {
+            for (PostImageEntity image : post.getImages()) {
+                s3Service.deleteFile(image.getImageUrl());
+            }
         }
 
         // 4. 찾은 게시글을 DB에서 삭제.
