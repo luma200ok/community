@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static org.springframework.http.HttpMethod.*;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -57,15 +59,14 @@ public class SecurityConfig {
                         // 💡 2. 통과 명단에 "/h2-console/**" 을 추가
                         .requestMatchers("/h2-console/**").permitAll()
 
-                        .requestMatchers("/api/users/signup", "/api/users/login","/api/users/reissue")
-                        .permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers("/api/users/signup", "/api/users/login","/api/users/reissue").permitAll()
+                        .requestMatchers(GET, "/api/posts","/api/posts/**").permitAll()
                         // 스프링 부트가 내부적으로 호출하는 에러 URL 통과 허용
                         .requestMatchers("/error").permitAll()
                         // 스웨거 관련 주소 통과 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // HTML, CSS ,JS 파일 무사통과
-                        .requestMatchers("/", "/index.html", "/favicon.ico", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/favicon.ico", "/css/**", "/js/**", "/card-test.html").permitAll()
 
                         .anyRequest().authenticated()
                 )
