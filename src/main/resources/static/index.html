@@ -35,7 +35,9 @@
             <input type="text" id="reg-username" class="input-box" placeholder="사용할 아이디">
             <input type="password" id="reg-password" class="input-box" placeholder="사용할 비밀번호">
             <input type="email" id="reg-email" class="input-box" placeholder="이메일 (예: test@test.com)">
-            <button class="btn btn-primary" style="width: 100%; background-color: #ff9800; border-color: #ff9800;" onclick="signup()">회원가입 완료</button>
+            <button class="btn btn-primary" style="width: 100%; background-color: #ff9800; border-color: #ff9800;"
+                    onclick="signup()">회원가입 완료
+            </button>
             <div class="link-group">
                 이미 계정이 있으신가요? <span class="link-text" onclick="toggleForm('login')">로그인으로 돌아가기</span>
             </div>
@@ -51,13 +53,17 @@
                 <button class="btn btn-primary" style="flex: 1;" onclick="writePost()">게시글 등록하기</button>
                 <button class="btn btn-outline" style="flex: 1;" onclick="showList()">취소</button>
             </div>
+        </div>
     </div>
 
     <div id="list-section">
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <input type="text" id="search-keyword" class="input-box" placeholder="검색어를 입력하세요 (제목+내용)" style="flex: 1; margin: 0;">
+            <input type="text" id="search-keyword" class="input-box" placeholder="검색어를 입력하세요 (제목+내용)"
+                   style="flex: 1; margin: 0;">
             <button class="btn btn-primary" onclick="fetchPosts()">검색</button>
-            <button class="btn btn-outline" onclick="document.getElementById('search-keyword').value=''; fetchPosts();">초기화</button>
+            <button class="btn btn-outline" onclick="document.getElementById('search-keyword').value=''; fetchPosts();">
+                초기화
+            </button>
         </div>
 
         <div id="post-list" class="card-container"></div>
@@ -74,10 +80,13 @@
         <h2 id="detail-title" style="margin-top: 0;">제목</h2>
         <div id="detail-meta" class="post-meta" style="margin-bottom: 20px;">작성자 정보</div>
         <div id="detail-images"></div>
-        <p id="detail-content" style="font-size: 1.1em; line-height: 1.6; margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">내용</p>
+        <p id="detail-content"
+           style="font-size: 1.1em; line-height: 1.6; margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+            내용</p>
 
         <div style="text-align: center; margin-bottom: 30px;">
-            <button id="like-btn" class="btn" onclick="toggleLike()" style="padding: 10px 20px; font-size: 1.1em; background-color: #ff4d4d; color: white; border-radius: 20px;"></button>
+            <button id="like-btn" class="btn" onclick="toggleLike()"
+                    style="padding: 10px 20px; font-size: 1.1em; background-color: #ff4d4d; color: white; border-radius: 20px;"></button>
         </div>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
 
