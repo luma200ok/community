@@ -164,21 +164,15 @@ public class PostService {
         PostEntity post = postRepository.findById(id)
                 .orElseThrow(() -> new CustomException(POST_NOT_FOUND));
 
-        // 2. 작성자와 삭제 요청자 일치 검증
-        if (!post.getUserEntity().getId().equals(userId)) {
+        // 2. 삭제 요청 보낸 유저 정보 조회
+        UserEntity requestUser = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        // 3. 작성자와 삭제 요청자 일치 검증
+        if (!post.getUserEntity().getId().equals(userId) && !requestUser.isAdmin()) {
             throw new CustomException(EDIT_ACCESS_DENIED);
         }
-        /*
-        // 3. S3에 저장된 사진이 있다면 for문을 돌리면서 삭제 시도
-        if (post.getImages() != null && !post.getImages().isEmpty()) {
-            for (PostImageEntity image : post.getImages()) {
-                s3Service.deleteFile(image.getImageUrl());
-            }
-        }
-
-        // 4. 찾은 게시글을 DB에서 삭제.
-        postRepository.delete(post);
-         */
+        // 4. 삭제 처리
         post.softDelete();
     }
 

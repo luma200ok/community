@@ -158,8 +158,7 @@ async function writePost() {
             document.getElementById("title").value = "";
             document.getElementById("content").value = "";
             imageInput.value = "";
-            hideAllForms();
-            fetchPosts();
+            showList();
         } else { alert("작성 실패"); }
     } catch (error) { console.error(error); }
 }
@@ -195,8 +194,7 @@ async function fetchPosts() {
                         <p class="card-summary">내용을 보려면 클릭하세요...</p>
                         <div class="card-footer">
                             <span>👤 ${post.writer}</span>
-                            <span>👀 ${post.viewCount} | ❤️ ${post.likeCount}</span>
-                        </div>
+                            <span>👀 ${post.viewCount} | ❤️ ${post.likeCount} | 💬 ${post.commentCount}</span>                        </div>
                     </div>
                 </div>
             `;
@@ -300,7 +298,8 @@ async function deleteComment(commentId) {
     const headers = getAuthHeaders();
     if (!headers.Authorization) return alert("로그인이 필요합니다!");
     try {
-        const response = await fetch(`${API_BASE}/comments/${commentId}`, { method: "DELETE", headers: headers });
+        // 💡 게시글 번호(currentPostId)를 주소에 추가했습니다!
+        const response = await fetch(`${API_BASE}/posts/${currentPostId}/comments/${commentId}`, { method: "DELETE", headers: headers });
         if (response.ok) viewPost(currentPostId);
         else alert("권한이 없습니다!");
     } catch (error) { console.error(error); }

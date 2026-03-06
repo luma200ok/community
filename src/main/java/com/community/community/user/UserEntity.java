@@ -30,6 +30,15 @@ public class UserEntity {
     @Column(unique = true, nullable = false)
     private String email;
 
+    // 1. 권한 필드 추가 (기본값 일반 유저)
+    @Column(nullable = false)
+    private String role = "USER";
+
+    // 2. 관리자(Admin) 확인 편의 메서드 추가
+    public boolean isAdmin() {
+        return "ADMIN".equals(this.role);
+    }
+
     @Builder
     public UserEntity(String username, String password, String email) {
         this.username = username;

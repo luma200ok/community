@@ -58,6 +58,7 @@ public class PostDto {
         }
     }
 
+    // 단건 조회
     public record PostListResponse(
             Long id,
             String title,
@@ -65,6 +66,7 @@ public class PostDto {
             Long viewCount,
             Long likeCount,
             String thumbnailUrl,
+            Long commentCount,
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
             LocalDateTime createdAt,
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
@@ -82,6 +84,7 @@ public class PostDto {
                     post.getViewCount(),
                     post.getLikeCount(),
                     thumb,
+                    post.getCommentCount(),
                     post.getCreatedAt(),
                     post.getUpdatedAt()
             );

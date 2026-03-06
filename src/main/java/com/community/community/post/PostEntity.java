@@ -46,6 +46,9 @@ public class PostEntity extends BaseTimeEntity {
     private Long likeCount = 0L;
 
     @Column(nullable = false)
+    private Long commentCount = 0L;
+
+    @Column(nullable = false)
     private boolean isDeleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -78,6 +81,16 @@ public class PostEntity extends BaseTimeEntity {
     public void decreaseLikeCount() {
         if (this.likeCount > 0) {
             this.likeCount--;
+        }
+    }
+
+    public void increaseCommentCount() {
+        this.commentCount++;
+    }
+
+    public void decreaseCommentCount() {
+        if (this.commentCount > 0) {
+            this.commentCount--;
         }
     }
 
