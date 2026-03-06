@@ -5,6 +5,7 @@ import com.community.community.config.RedisService;
 import com.community.community.exception.CustomException;
 import com.community.community.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     private final JwtUtil jwtUtil;
+
+    // promoteToAdmin 1. yaml 환경변수
+    @Value("${admin.secret-key}")
+    private String adminSecretKey;
 
     private final RedisService redisService;
 
@@ -119,6 +124,24 @@ public class UserService {
 
     public void logout(Long userId) {
         redisService.deleteValues("RT:" + userId);
+    }
+
+    /**
+     * 숨겨진 관리자 승급 로직
+     */
+    @Transactional
+    public void promoteToAdmin(String username, String secretKey) {
+
+        // 2. 비밀키가 틀리면 바로 쫓아냄 (권한 에러 던지기)
+        if (!adminSecretKey.equals(secretKey)) {
+            throw new CustomException(ErrorCode.EDIT_ACCESS_DENIED);
+        }
+
+        // 3. 비밀키가 맞으면 유저를 찾아 승급!
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        user.promoteToAdmin();
     }
 
     private void validateDuplicateUsername(String username) {

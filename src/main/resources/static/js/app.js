@@ -352,3 +352,56 @@ window.onload = function() {
     renderHeader();
     fetchPosts();
 };
+
+// ==========================================
+// 💡 6. 관리자 이스터에그 (로고 5번 클릭)
+// ==========================================
+let logoClickCount = 0;
+let logoClickTimer = null;
+
+function handleLogoClick() {
+    showList(); // 💡 기본 기능인 '목록 새로고침'은 그대로 유지
+
+    logoClickCount++;
+
+    // 2초 안에 연속으로 안 누르면 카운트 초기화
+    if (logoClickCount === 1) {
+        logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 2000);
+    }
+
+    // 5번 연속 클릭 성공!
+    if (logoClickCount >= 5) {
+        clearTimeout(logoClickTimer);
+        logoClickCount = 0;
+        triggerEasterEgg(); // 이스터에그 발동!
+    }
+}
+
+async function triggerEasterEgg() {
+    // 1. 누구를 승급시킬지 묻기
+    const targetUsername = prompt("🔥 [Admin Mode] 관리자로 승급시킬 유저의 아이디를 입력하세요:");
+    if (!targetUsername) return;
+
+    // 2. 시크릿 키 묻기
+    const secretKey = prompt("🔥 [Admin Mode] 시크릿 키를 입력하세요:");
+    if (!secretKey) return;
+
+    // 3. 백엔드 비밀 API 호출!
+    try {
+        const headers = getAuthHeaders();
+        const response = await fetch(`${API_BASE}/users/promote?username=${encodeURIComponent(targetUsername)}&secretKey=${encodeURIComponent(secretKey)}`, {
+            method: "POST",
+            headers: headers
+        });
+
+        if (response.ok) {
+            const msg = await response.text();
+            alert("🎉 " + msg);
+            location.reload(); // 성공 시 새로고침하여 관리자 권한 즉시 적용
+        } else {
+            alert("❌ 권한이 없거나 잘못된 입력입니다.");
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}

@@ -1,5 +1,6 @@
 package com.community.community.user;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.community.community.user.UserDto.*;
@@ -61,5 +63,15 @@ public class UserController {
         userService.logout(userId);
 
         return ResponseEntity.ok("성공적으로 로그아웃 되었습니다.");
+    }
+
+    @Hidden
+    @PostMapping("/promote")
+    public ResponseEntity<String> promoteToAdmin(
+            @RequestParam String username,
+            @RequestParam String secretKey) { // 주소창이나 파라미터로 시크릿 키를 받음
+
+        userService.promoteToAdmin(username, secretKey);
+        return ResponseEntity.ok("관리자로 성공적으로 승급되었습니다. 환영합니다, 마스터.");
     }
 }

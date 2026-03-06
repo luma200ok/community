@@ -55,4 +55,9 @@ public class UserEntity {
     public void updatePassword(String newPassword) {
         this.password = newPassword;
     }
+
+    // 관리자로 승급시키는 메서드
+    public void promoteToAdmin() {
+        this.role = "ADMIN";
+    }
 }

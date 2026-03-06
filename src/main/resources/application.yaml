@@ -26,3 +26,6 @@ spring:
     properties:
       hibernate:
         default_batch_fetch_size: 100 # N+1 방지!
+
+admin:
+  secret-key: ${ADMIN_SECRET_KEY:local-secret-key}
