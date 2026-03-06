@@ -1,0 +1,16 @@
+server:
+  port: 8082
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 💡 로컬호스트 3306 포트의 community 데이터베이스에 연결!
+    url: jdbc:mysql://localhost:3306/community?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update # 기존 데이터 유지, 변경된 테이블 구조만 업데이트
+    show-sql: false
+    database-platform: org.hibernate.dialect.MySQLDialect # 난 MySQL이다! 하고 명시

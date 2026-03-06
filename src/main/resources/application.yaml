@@ -1,37 +1,28 @@
 spring:
-  datasource:
-    #url: jdbc:h2:mem:community_db  # mem-test
-    url: jdbc:h2:file:~/db/community
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        default_batch_fetch_size: 100 # IN 쿼리로 100개씩 묶어서 가져옴
+  profiles:
+    active: local # 💡 인텔리제이에서 켤 때는 무조건 local로 작동!
+
   data:
     redis:
       host: localhost
       port: 6379
+
   cloud:
     aws:
       credentials:
         access-key: ${AWS_ACCESS_KEY}
         secret-key: ${AWS_SECRET_KEY}
       s3:
-       bucket: my-community-image-bucket-123
+        bucket: my-community-image-bucket-123
       region:
         static: ap-northeast-2
+
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 50MB
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+  jpa:
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100 # N+1 방지!
