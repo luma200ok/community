@@ -19,14 +19,16 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.community.community.comment.CommentDto.CommentResponse;
 import static com.community.community.post.PostDto.PostListResponse;
 
-@Tag(name = "\uD83D\uDC64 마이 페이지" ,description = "나의 정보 (게시글 ,댓글 ,좋아요) 조회, 비밀번호 변경을 담당하는 API 입니다.")
-@RestController
+@Tag(name = "👤 마이페이지 API", description = "내 정보(비밀번호) 수정 및 내가 작성한 글/댓글, 좋아요 누른 글 목록을 조회합니다.")@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/mypage")
 public class MyPageController{
 
     private final MyPageService myPageService;
 
+    @Operation(summary = "비밀번호 변경",
+            description = "현재 비밀번호와 새 비밀번호를 입력받아, 내 비밀번호를 안전하게 변경합니다.\n\n" +
+                    "**권한:** **JWT 토큰이 필수**입니다.")
     @PatchMapping("/password")
     public ResponseEntity<String> updatePassword(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId,

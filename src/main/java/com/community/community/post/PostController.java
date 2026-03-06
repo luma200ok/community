@@ -35,8 +35,7 @@ import static com.community.community.post.PostDto.PostDetailResponse;
 import static com.community.community.post.PostDto.PostListResponse;
 import static com.community.community.post.PostDto.PostUpdateRequest;
 
-@Tag(name = "📝 게시글 API", description = "게시글 작성, 조회, 수정, 삭제를 담당하는 API입니다.")
-@RestController
+@Tag(name = "📝 게시글 API", description = "게시글 페이징 조회, 검색, 작성, 수정, 삭제 기능을 제공합니다. (S3 다중 이미지 업로드 포함)")@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/posts")
 public class PostController {

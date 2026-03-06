@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.community.community.user.UserDto.*;
 
-@Tag(name = "유저 회원가입,로그인", description = "유저의 회원가입과 로그인을 담당하는 API 입니다.")
+@Tag(name = "🔐 유저 인증 API", description = "회원가입, 로그인, 로그아웃 및 JWT 토큰 재발급 기능을 제공합니다.")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -23,12 +23,14 @@ public class UserController {
 
     private final UserService userService;
 
+    @Operation(summary = "회원가입", description = "아이디, 비밀번호, 이메일을 입력받아 새로운 사용자를 등록합니다.")
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody UserSignupRequest request) {
         Long userId = userService.signUp(request);
         return ResponseEntity.ok("가입 완료");
     }
 
+    @Operation(summary = "로그인", description = "아이디와 비밀번호를 검증한 후, 성공 시 Access Token과 Refresh Token을 발급합니다.")
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@RequestBody UserLoginRequest request) {
 
