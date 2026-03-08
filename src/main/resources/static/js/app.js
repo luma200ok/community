@@ -585,7 +585,6 @@ async function showMyPage() {
             commentsDiv.innerHTML = data.content.length > 0
                 ? data.content.map(c => `
         <div class="link-text" onclick="viewPost(${c.postId})" style="margin-bottom:8px; padding:10px; background:#f8f9fa; border-radius:6px; cursor:pointer;">
-            <small style="color:#666;">📝 내가 쓴 댓글:</small><br>
             <strong>${c.content}</strong>
         </div>
     `).join('')
@@ -637,28 +636,37 @@ async function updateUserInfo() {
     headers["Content-Type"] = "application/json";
 
     try {
-        const response = await fetch(`${API_BASE}/mypage/password`, {
-            method: "PATCH",
-            headers: headers,
-            body: JSON.stringify({ currentPassword, newPassword })
-        });
-
-        if (response.ok) {
-            alert("🎉 정보가 성공적으로 수정되었습니다! 보안을 위해 다시 로그인 해주세요.");
-
-            // 입력 필드 초기화
-            document.getElementById("upd-current-pw").value = "";
-            document.getElementById("upd-new-pw").value = "";
-            document.getElementById("upd-new-hint").value = "";
-
-            logout(); // 정보 변경 후 재로그인 유도
-        } else {
-            // 백엔드에서 던지는 에러 메시지 확인 (현재 비밀번호 불일치 등)
-            const errorText = await response.text();
-            alert("❌ 수정 실패: " + (errorText || "비밀번호가 틀렸거나 입력값이 잘못되었습니다."));
+        // 1. 비밀번호 변경 (새 비밀번호 칸이 비어있지 않을 때만 호출)
+        if (newPassword && newPassword.trim() !== "") {
+            const pwRes = await fetch(`${API_BASE}/mypage/password`, {
+                method: "PATCH",
+                headers: headers,
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+            if (!pwRes.ok) throw new Error("비밀번호 수정 실패");
         }
+
+        // 2. 힌트 정답 변경 (새 힌트 칸이 비어있지 않을 때만 호출)
+        if (newHintAnswer && newHintAnswer.trim() !== "") {
+            const hintRes = await fetch(`${API_BASE}/mypage/hint`, {
+                method: "PATCH",
+                headers: headers,
+                body: JSON.stringify({ currentPassword, newHintAnswer })
+            });
+            if (!hintRes.ok) throw new Error("힌트 수정 실패");
+        }
+
+        alert("🎉 정보가 성공적으로 수정되었습니다! 보안을 위해 다시 로그인 해주세요.");
+
+        // 입력 필드 초기화 및 로그아웃
+        document.getElementById("upd-current-pw").value = "";
+        document.getElementById("upd-new-pw").value = "";
+        document.getElementById("upd-new-hint").value = "";
+
+        logout();
+
     } catch (error) {
         console.error(error);
-        alert("❌ 서버 통신 중 오류가 발생했습니다.");
+        alert("❌ 수정 실패: 현재 비밀번호가 틀렸거나 통신 오류가 발생했습니다.");
     }
 }

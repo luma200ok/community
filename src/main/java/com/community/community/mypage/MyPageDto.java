@@ -1,13 +1,6 @@
 package com.community.community.mypage;
 
-import com.community.community.comment.CommentDto;
-import com.community.community.comment.CommentEntity;
-import com.community.community.post.PostDto;
-import com.community.community.post.PostEntity;
 import com.community.community.user.UserEntity;
-import jakarta.validation.constraints.NotBlank;
-
-import java.util.List;
 
 public class MyPageDto {
 
