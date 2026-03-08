@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.UUID;
 
 import static com.community.community.user.UserDto.*;
 
@@ -21,8 +22,10 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MailService mailService;
 
     private final JwtUtil jwtUtil;
+
 
     // promoteToAdmin 1. yaml 환경변수
     @Value("${admin.secret-key}")
@@ -142,6 +145,33 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         user.promoteToAdmin();
+    }
+
+    /**
+     * 비밀번호 찾기 (임시 비밀번호 발급 및 이메일 전송)
+     */
+    @Transactional
+    public void resetPasswordAndSendEmail(PasswordFindRequest request) {
+        // 1. 아이디와 이메일로 회원 검증
+        // "일치하는 회원 정보가 없습니다" 등 적절한 에러 처리
+        UserEntity user = userRepository.findByUsernameAndEmail(request.username(), request.email())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 2. 임시 비밀번호 생성 (UUID 활용하여 랜덤 영문+숫자 10자리 생성)
+        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+
+        // 3. 생성된 임시 비밀번호를 암호화하여 DB에 덮어쓰기
+        user.updatePassword(passwordEncoder.encode(tempPassword));
+
+        // 4. 이메일 발송 내용 작성
+        String emailTitle = "🔥 Toy Community 임시 비밀번호 발급 안내";
+        String emailContent = "안녕하세요, " + user.getUsername() + "님!\n\n"
+                + "요청하신 임시 비밀번호가 발급되었습니다.\n"
+                + "임시 비밀번호 : [ " + tempPassword + " ]\n\n"
+                + "임시 비밀번호로 로그인하신 후, 반드시 마이페이지에서 비밀번호를 변경해 주세요!";
+
+        // 5. 우체부에게 발송 지시! 🚀
+        mailService.sendEmail(user.getEmail(), emailTitle, emailContent);
     }
 
     private void validateDuplicateUsername(String username) {

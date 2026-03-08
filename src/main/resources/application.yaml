@@ -27,5 +27,17 @@ spring:
       hibernate:
         default_batch_fetch_size: 100 # N+1 방지!
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME} # 발송할 본인의 구글 이메일 (예: test@gmail.com)
+    password: ${MAIL_PASSWORD} # 구글 계정 '앱 비밀번호' (기존 비밀번호 아님!)
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 admin:
   secret-key: ${ADMIN_SECRET_KEY:local-secret-key}

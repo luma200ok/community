@@ -65,6 +65,17 @@ public class UserController {
         return ResponseEntity.ok("성공적으로 로그아웃 되었습니다.");
     }
 
+    @Operation(
+            summary = "비밀번호 찾기",
+            description = "아이디와 이메일을 입력하면, 해당 이메일로 임시 비밀번호를 발송합니다.")
+    @PostMapping("/password/find")
+    public ResponseEntity<String> findPassword(@RequestBody @Valid PasswordFindRequest request) {
+
+        userService.resetPasswordAndSendEmail(request);
+
+        return ResponseEntity.ok("입력하신 이메일로 임시 비밀번호가 성공적으로 발송되었습니다.");
+    }
+
     @Hidden
     @PostMapping("/promote")
     public ResponseEntity<String> promoteToAdmin(

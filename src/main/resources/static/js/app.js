@@ -242,17 +242,50 @@ async function viewPost(postId) {
         commentDiv.innerHTML = "";
         if (post.comments.length === 0) commentDiv.innerHTML = "<p style='color:#777;'>첫 번째 댓글을 남겨보세요!</p>";
 
-        post.comments.forEach(comment => {
-            commentDiv.innerHTML += `
-                <div class="comment-box">
+        // 💡 1. 댓글과 대댓글을 그려주는 마법의 재귀 함수
+        function generateCommentHtml(comment, isReply = false) {
+            const isDeleted = comment.writer === "(알 수 없음)";
+
+            // ⭐ [디테일 추가] 내용 맨 앞에 '@유저이름'이 있으면 파란색으로 예쁘게 강조해 주는 정규식!
+            const formattedContent = comment.content.replace(/^(@\S+)/, '<span style="color: #007bff; font-weight: bold;">$1</span>');
+
+            let html = `
+                <div class="comment-box" style="${isReply ? 'margin-left: 40px; border-left: 3px solid #eee; padding-left: 15px;' : ''}">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div><b>${comment.writer}</b> <span style="font-size:0.8em; color:#999;">(${comment.createdAt})</span></div>
-                        <button class="btn btn-outline" style="padding: 2px 8px; font-size: 12px; color: #dc3545; border-color: #dc3545;" onclick="deleteComment(${comment.id})">삭제</button>
+                        <div>
+                            ${isReply ? '↳ ' : ''}<b>${comment.writer}</b> 
+                            <span style="font-size:0.8em; color:#999;">(${comment.createdAt})</span>
+                        </div>
+                        <div>
+                            ${!isDeleted ? `<button class="btn btn-text" style="font-size: 12px; padding: 2px 5px;" onclick="showReplyInput(${comment.id}, ${isReply ? `'${comment.writer}'` : 'null'})">답글</button>` : ''}
+                            
+                            ${!isDeleted ? `<button class="btn btn-outline" style="padding: 2px 8px; font-size: 12px; color: #dc3545; border-color: #dc3545;" onclick="deleteComment(${comment.id})">삭제</button>` : ''}
+                        </div>
                     </div>
-                    <div style="margin-top:5px;">${comment.content}</div>
+                    
+                    <div style="margin-top:5px; ${isDeleted ? 'color:#999; font-style:italic;' : ''}">${isDeleted ? comment.content : formattedContent}</div>
+                    
+                    <div id="reply-input-${comment.id}" style="display: none; margin-top: 10px; gap: 10px;">
+                        <input type="text" id="reply-content-${comment.id}" class="input-box" placeholder="답글을 입력하세요" style="flex: 1; margin: 0; padding: 8px;">
+                        <button class="btn btn-primary" style="padding: 8px 15px;" onclick="writeReply(${comment.id})">등록</button>
+                    </div>
                 </div>
             `;
+
+            // 내 밑에 대댓글이 있다면 반복해서 그림 (들여쓰기는 1번만 적용됨)
+            if (comment.replies && comment.replies.length > 0) {
+                comment.replies.forEach(reply => {
+                    html += generateCommentHtml(reply, true);
+                });
+            }
+            return html;
+        }
+
+        // 💡 3. 최상위 댓글부터 순회하며 화면에 찍기
+        post.comments.forEach(comment => {
+            commentDiv.innerHTML += generateCommentHtml(comment, false);
         });
+
     } catch (error) { console.error(error); }
 }
 
@@ -404,4 +437,53 @@ async function triggerEasterEgg() {
     } catch (error) {
         console.error(error);
     }
+}
+
+// ==========================================
+// 💡 7. 대댓글(답글) UI 컨트롤 및 등록 로직
+// ==========================================
+
+// 답글 창 보이기/숨기기 토글
+function showReplyInput(commentId, targetWriter) {
+    const inputDiv = document.getElementById(`reply-input-${commentId}`);
+    if (inputDiv.style.display === "none") {
+        inputDiv.style.display = "flex";
+        const inputField = document.getElementById(`reply-content-${commentId}`);
+
+        // ⭐ 대댓글에 답글을 다는 경우, 입력창에 '@작성자 '를 미리 쳐줍니다!
+        if (targetWriter) {
+            inputField.value = `@${targetWriter} `;
+        } else {
+            inputField.value = ""; // 일반 부모 댓글이면 빈칸
+        }
+        inputField.focus(); // 마우스 클릭 없이 바로 타자 칠 수 있게 커서 자동 깜빡임!
+    } else {
+        inputDiv.style.display = "none";
+    }
+}
+
+// 대댓글(답글) 작성 API 호출
+async function writeReply(parentId) {
+    const content = document.getElementById(`reply-content-${parentId}`).value;
+    const headers = getAuthHeaders();
+
+    if (!headers.Authorization) return alert("로그인이 필요합니다!");
+    if (!content.trim()) return alert("답글 내용을 입력하세요.");
+
+    headers["Content-Type"] = "application/json";
+
+    try {
+        const response = await fetch(`${API_BASE}/posts/${currentPostId}/comments/${parentId}/replies`, {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify({ content })
+        });
+
+        if (response.ok) {
+            // 성공하면 게시글 상세 화면을 새로고침하여 바뀐 댓글 목록을 보여줌
+            viewPost(currentPostId);
+        } else {
+            alert("답글 작성 실패!");
+        }
+    } catch (error) { console.error(error); }
 }
