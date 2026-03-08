@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.community.community.comment.CommentDto.*;
+import static com.community.community.exception.ErrorCode.COMMENT_MISMATCH;
+import static com.community.community.exception.ErrorCode.COMMENT_NOT_FOUND;
+import static com.community.community.exception.ErrorCode.POST_NOT_FOUND;
 import static com.community.community.exception.ErrorCode.USER_NOT_FOUND;
 
 @Service
@@ -86,7 +89,46 @@ public class CommentService {
 
         comment.getPostEntity().decreaseCommentCount();
 
-        // 4. DB에서 삭제
-        commentRepository.delete(comment);
+        // 4. 똑똑한 삭제 로직
+        // 내 밑에 대댓글(자식)이 존재한다면 DB에서 지우지 않고 '삭제된 상태'로만 변경!
+        if (!comment.getChildren().isEmpty()) {
+            comment.softDelete();
+        } else {
+            // 대댓글이 하나도 없다면 미련 없이 DB에서 진짜 삭제!
+            commentRepository.delete(comment);
+        }
+    }
+
+    public Long writeReply(Long postId, Long parentId, CommentCreateRequest request, Long userId) {
+
+        // 1. 유저와 게시글 검증
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        PostEntity post = postRepository.findById(postId)
+                .orElseThrow(() -> new CustomException(POST_NOT_FOUND));
+
+        // 2. 부모 댓글 존재 여부 검증
+        CommentEntity parentComment = commentRepository.findById(parentId)
+                .orElseThrow(() -> new CustomException(COMMENT_NOT_FOUND));
+
+        // 3. 부모 댓글이 현재 게시글의 댓글이 맞는지 검증 (엉뚱한 글의 댓글에 답글 방지)
+        if (!parentComment.getPostEntity().getId().equals(postId)) {
+            throw new CustomException(COMMENT_MISMATCH);
+        }
+
+        // 4. 대댓글 생성 (게시글의 전체 댓글 수 +1)
+        post.increaseCommentCount();
+
+        CommentEntity reply = CommentEntity.builder()
+                .content(request.content())
+                .userEntity(user)
+                .postEntity(post)
+                .build();
+
+        parentComment.addReply(reply);
+
+        commentRepository.save(reply);
+
+        return reply.getId();
     }
 }

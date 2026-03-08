@@ -53,7 +53,10 @@ public class PostDto {
                     urls, // 3. 뽑아낸 리스트 삽입
                     post.getCreatedAt(),
                     post.getUpdatedAt(),
-                    comments.stream().map(CommentResponse::from).toList()
+                    comments.stream()
+                            .filter(c -> c.getParent() == null)
+                            .map(CommentResponse::from)
+                            .toList()
             );
         }
     }

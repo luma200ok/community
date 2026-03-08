@@ -40,6 +40,19 @@ public class CommentController {
         return ResponseEntity.ok("댓글 작성이 완료되었습니다. 댓글 번호: " + commentId);
     }
 
+    @Operation(summary = "대댓글 작성", description = "특정 부모 댓글 아래에 대댓글(답글)을 등록합니다.")
+    @PostMapping("/{parentId}/replies")
+    public ResponseEntity<String> writeReply(
+            @PathVariable Long postId,
+            @PathVariable Long parentId,
+            @RequestBody CommentCreateRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
+
+        Long replyId = commentService.writeReply(postId, parentId, request, userId);
+
+        return ResponseEntity.ok("대댓글 작성이 완료되었습니다. 댓글 번호: " + replyId);
+    }
+
     @Operation(
             summary = "댓글 수정",
             description = "작성한 댓글의 내용을 수정합니다.\n\n" +
