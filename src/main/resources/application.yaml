@@ -1,3 +1,6 @@
+admin:
+  secret-key: ${ADMIN_SECRET_KEY:local-secret-key}
+
 spring:
   profiles:
     active: local # 💡 인텔리제이에서 켤 때는 무조건 local로 작동!
@@ -38,6 +41,3 @@ spring:
           auth: true
           starttls:
             enable: true
-
-admin:
-  secret-key: ${ADMIN_SECRET_KEY:local-secret-key}

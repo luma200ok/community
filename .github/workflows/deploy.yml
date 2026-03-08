@@ -66,6 +66,8 @@ jobs:
             -DDB_USERNAME=${{ secrets.DB_USERNAME }} \
             -DDB_PASSWORD=${{ secrets.DB_PASSWORD }} \
             -DADMIN_SECRET_KEY=${{ secrets.ADMIN_SECRET_KEY }} \
+            -DMAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
+            -DMAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} \
             $JAR_NAME > app.log 2>&1 &
           
             echo "🚀 커뮤니티 서버(8082, Prod모드, MySQL 연동) 자동 배포 완료!"
