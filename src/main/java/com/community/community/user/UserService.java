@@ -34,7 +34,7 @@ public class UserService {
     private final RedisService redisService;
 
     //회원가입 기능
-    public Long signUp(UserSignupRequest request) {
+    public void signUp(UserSignupRequest request) {
         // 1. 이름,이메일 중복 검사
         validateDuplicateUsername(request.username());
         validateDuplicateEmail(request.email());
@@ -47,12 +47,11 @@ public class UserService {
                 .username(request.username())
                 .password(encodedPassword)
                 .email(request.email())
+                .hintAnswer(request.hintAnswer())
                 .build();
 
         // 4. DB 저장
         userRepository.save(userEntity);
-        // 5. 저장된 회원의 PK(id) 반환
-        return userEntity.getId();
     }
 
     /**
@@ -152,25 +151,29 @@ public class UserService {
      */
     @Transactional
     public void resetPasswordAndSendEmail(PasswordFindRequest request) {
-        // 1. 아이디와 이메일로 회원 검증
-        // "일치하는 회원 정보가 없습니다" 등 적절한 에러 처리
+        // 1. 아이디와 이메일로 회원 조회
         UserEntity user = userRepository.findByUsernameAndEmail(request.username(), request.email())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        // 2. 임시 비밀번호 생성 (UUID 활용하여 랜덤 영문+숫자 10자리 생성)
-        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+        // 💡 방어막 1: 힌트 정답이 일치하는지 확인! (틀리면 에러 뱉고 컷!)
+        if (!user.getHintAnswer().equals(request.hintAnswer())) {
+            throw new IllegalArgumentException("힌트 정답이 일치하지 않습니다.");
+        }
 
-        // 3. 생성된 임시 비밀번호를 암호화하여 DB에 덮어쓰기
+        // 💡 방어막 2: 5분 쿨타임이 지났는지 확인! (안 지났으면 컷!)
+        if (!user.canSendEmail()) {
+            throw new IllegalArgumentException("메일 발송은 5분에 한 번만 가능합니다. 잠시 후 다시 시도해주세요.");
+        }
+
+        // --- 여기서부터는 기존 로직과 동일 ---
+        String tempPassword = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 10);
         user.updatePassword(passwordEncoder.encode(tempPassword));
 
-        // 4. 이메일 발송 내용 작성
-        String emailTitle = "🔥 Toy Community 임시 비밀번호 발급 안내";
-        String emailContent = "안녕하세요, " + user.getUsername() + "님!\n\n"
-                + "요청하신 임시 비밀번호가 발급되었습니다.\n"
-                + "임시 비밀번호 : [ " + tempPassword + " ]\n\n"
-                + "임시 비밀번호로 로그인하신 후, 반드시 마이페이지에서 비밀번호를 변경해 주세요!";
+        // 💡 쿨타임 타이머 리셋! (현재 시간으로 업데이트)
+        user.updateEmailSentAt();
 
-        // 5. 우체부에게 발송 지시! 🚀
+        String emailTitle = "🔥 Toy Community 임시 비밀번호 발급 안내";
+        String emailContent = "임시 비밀번호 : [ " + tempPassword + " ]\n\n반드시 마이페이지에서 비밀번호를 변경해 주세요!";
         mailService.sendEmail(user.getEmail(), emailTitle, emailContent);
     }
 

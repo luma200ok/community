@@ -50,20 +50,24 @@ function renderHeader() {
 // 💡 2. 화면 섹션 전환 로직 (토글)
 // ==========================================
 function hideAllForms() {
-    ['login-section', 'signup-section', 'write-section'].forEach(id => {
+    // ⭐ 'find-password-section'을 닫기 목록에 확실하게 추가!
+    ['login-section', 'signup-section', 'write-section', 'find-password-section'].forEach(id => {
         document.getElementById(id).style.display = 'none';
     });
 }
 
 function toggleForm(type) {
-    hideAllForms();
+    hideAllForms(); // 열려있는 모든 폼을 싹 다 닫음
 
-    // ⭐ 화면이 전환되는 느낌을 위해 밑에 깔려있던 리스트와 상세페이지를 완전히 숨깁니다!
+    // 화면이 전환되는 느낌을 위해 밑에 깔려있던 리스트와 상세페이지도 숨김
     document.getElementById('list-section').style.display = 'none';
     document.getElementById('detail-section').style.display = 'none';
 
+    // 요청한(type) 화면만 딱 켜주기! (코드 통일성 확보)
     if (type === 'signup') document.getElementById('signup-section').style.display = 'block';
     if (type === 'login') document.getElementById('login-section').style.display = 'block';
+    if (type === 'find-password') document.getElementById('find-password-section').style.display = 'block';
+
     if (type === 'write') {
         const headers = getAuthHeaders();
         if(!headers.Authorization) {
@@ -81,15 +85,23 @@ async function signup() {
     const username = document.getElementById("reg-username").value;
     const password = document.getElementById("reg-password").value;
     const email = document.getElementById("reg-email").value;
+    const hintAnswer = document.getElementById("reg-hint").value;
     try {
         const response = await fetch(`${API_BASE}/users/signup`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password, email })
+            body: JSON.stringify({ username, password, email, hintAnswer })
         });
         if (response.ok) {
             alert("🎉 회원가입 성공! 이제 로그인해주세요.");
             toggleForm('login');
+
+            // 폼 비우기 (청소!)
+            document.getElementById("reg-username").value = "";
+            document.getElementById("reg-password").value = "";
+            document.getElementById("reg-email").value = "";
+            document.getElementById("reg-hint").value = "";
+
         } else {
             const errorData = await response.json();
             alert("가입 실패: " + errorData.message);
@@ -486,4 +498,46 @@ async function writeReply(parentId) {
             alert("답글 작성 실패!");
         }
     } catch (error) { console.error(error); }
+}
+
+// ==========================================
+// 💡 8. 비밀번호 찾기 (임시 비밀번호 이메일 발송)
+// ==========================================
+async function findPassword() {
+    const username = document.getElementById("find-username").value;
+    const email = document.getElementById("find-email").value;
+    const hintAnswer = document.getElementById("find-hint").value;
+
+    if (!username || !email || !hintAnswer) {
+        return alert("모든 항목을 입력해주세요.");
+    }
+
+    alert("이메일 발송을 요청했습니다. 잠시만 기다려주세요... 🚀");
+
+    try {
+        const response = await fetch(`${API_BASE}/users/password/find`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, hintAnswer })
+        });
+
+        if (response.ok) {
+            const msg = await response.text();
+            alert("🎉 " + msg);
+
+            //  폼 비우기 (청소!)
+            document.getElementById("find-username").value = "";
+            document.getElementById("find-email").value = "";
+            document.getElementById("find-hint").value = "";
+
+            toggleForm('login'); // 성공하면 로그인 창으로 이동
+        } else {
+            // 에러 메시지(힌트 틀림, 5분 쿨타임 등) 띄워주기
+            const errorData = await response.json();
+            alert("❌ " + (errorData.message || "정보가 일치하지 않습니다."));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("❌ 서버 통신 중 오류가 발생했습니다.");
+    }
 }

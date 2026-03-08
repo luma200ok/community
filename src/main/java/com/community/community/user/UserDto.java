@@ -12,7 +12,9 @@ public class UserDto {
             String password,
             @NotBlank(message = "이메일은 필수입니다.")
             @Email(message = "이메일 형식이 올바르지 않습니다.")
-            String email
+            String email,
+            @NotBlank(message = "비밀번호 찾기 힌트 정답을 입력해주세요.")
+            String hintAnswer
     ) {
     }
 
@@ -39,7 +41,9 @@ public class UserDto {
             String username,
             @NotBlank(message = "가입 시 사용한 이메일을 입력해주세요.")
             @Email(message = "올바른 이메일 형식이 아닙니다.")
-            String email
+            String email,
+            @NotBlank(message = "가입 시 설정한 힌트 정답을 입력해주세요.")
+            String hintAnswer
     ) {
     }
 }

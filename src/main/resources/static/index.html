@@ -26,7 +26,7 @@
             <button class="btn btn-primary" style="width: 100%;" onclick="login()">로그인</button>
             <div class="link-group">
                 <span class="link-text" onclick="toggleForm('signup')">회원가입</span> |
-                <span class="link-text" onclick="alert('비밀번호 찾기 API는 공사 중입니다! 🛠️')">비밀번호 찾기</span>
+                <span class="link-text" onclick="toggleForm('find-password')">비밀번호 찾기</span>
             </div>
         </div>
 
@@ -35,11 +35,23 @@
             <input type="text" id="reg-username" class="input-box" placeholder="사용할 아이디">
             <input type="password" id="reg-password" class="input-box" placeholder="사용할 비밀번호">
             <input type="email" id="reg-email" class="input-box" placeholder="이메일 (예: test@test.com)">
+            <input type="text" id="reg-hint" class="input-box" placeholder="비밀번호 찾기 힌트 (예: 출신 초등학교는?)">
             <button class="btn btn-primary" style="width: 100%; background-color: #ff9800; border-color: #ff9800;"
                     onclick="signup()">회원가입 완료
             </button>
             <div class="link-group">
                 이미 계정이 있으신가요? <span class="link-text" onclick="toggleForm('login')">로그인으로 돌아가기</span>
+            </div>
+        </div>
+
+        <div class="section form-card" id="find-password-section" style="display: none;">
+            <h3 style="text-align: center;">🔍 비밀번호 찾기</h3>
+            <input type="text" id="find-username" class="input-box" placeholder="아이디를 입력하세요">
+            <input type="email" id="find-email" class="input-box" placeholder="가입 시 이메일을 입력하세요">
+            <input type="text" id="find-hint" class="input-box" placeholder="힌트 정답을 입력하세요">
+            <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="findPassword()">임시 비밀번호 이메일로 받기</button>
+            <div class="link-group">
+                <span class="link-text" onclick="toggleForm('login')">로그인으로 돌아가기</span>
             </div>
         </div>
 

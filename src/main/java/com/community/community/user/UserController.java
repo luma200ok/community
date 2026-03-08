@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.community.community.user.UserDto.*;
+import static com.community.community.user.UserDto.PasswordFindRequest;
+import static com.community.community.user.UserDto.TokenReissueRequest;
+import static com.community.community.user.UserDto.TokenResponse;
+import static com.community.community.user.UserDto.UserLoginRequest;
+import static com.community.community.user.UserDto.UserSignupRequest;
 
 @Tag(name = "🔐 유저 인증 API", description = "회원가입, 로그인, 로그아웃 및 JWT 토큰 재발급 기능을 제공합니다.")
 @RestController
@@ -28,7 +31,7 @@ public class UserController {
     @Operation(summary = "회원가입", description = "아이디, 비밀번호, 이메일을 입력받아 새로운 사용자를 등록합니다.")
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody UserSignupRequest request) {
-        Long userId = userService.signUp(request);
+        userService.signUp(request);
         return ResponseEntity.ok("가입 완료");
     }
 
