@@ -1,9 +1,12 @@
 package com.community.community.user;
 
+import com.community.community.comment.CommentRepository;
 import com.community.community.config.JwtUtil;
 import com.community.community.config.RedisService;
 import com.community.community.exception.CustomException;
 import com.community.community.exception.ErrorCode;
+import com.community.community.like.LikeRepository;
+import com.community.community.post.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,9 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.UUID;
 
-import static com.community.community.user.UserDto.*;
+import static com.community.community.user.UserDto.PasswordFindRequest;
+import static com.community.community.user.UserDto.TokenReissueRequest;
+import static com.community.community.user.UserDto.TokenResponse;
+import static com.community.community.user.UserDto.UserLoginRequest;
+import static com.community.community.user.UserDto.UserSignupRequest;
 
 @RequiredArgsConstructor
 @Service
@@ -27,7 +33,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
 
 
-    // promoteToAdmin 1. yaml 환경변수
+    // promoteToAdmin yaml 환경변수
     @Value("${admin.secret-key}")
     private String adminSecretKey;
 

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.community.community.comment.CommentDto.CommentResponse;
+import static com.community.community.mypage.MyPageDto.*;
 import static com.community.community.post.PostDto.PostListResponse;
 
 @Tag(name = "👤 마이페이지 API", description = "내 정보(비밀번호) 수정 및 내가 작성한 글/댓글, 좋아요 누른 글 목록을 조회합니다.")@RestController
@@ -32,7 +33,7 @@ public class MyPageController{
     @PatchMapping("/password")
     public ResponseEntity<String> updatePassword(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId,
-            @RequestBody MyPageDto.PasswordUpdateRequest request
+            @RequestBody PasswordUpdateRequest request
     ) {
         myPageService.updatePassword(userId, request);
         return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
@@ -72,5 +73,19 @@ public class MyPageController{
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
         return ResponseEntity.ok(myPageService.getMyLikePosts(userId, pageable));
+    }
+
+    @Operation(summary = "내 기본 정보 조회")
+    @GetMapping("/info")
+    public ResponseEntity<MyPageInfoResponse> getMyInfo(@AuthenticationPrincipal Long userId) {
+        return ResponseEntity.ok(myPageService.getMyInfo(userId));
+    }
+
+    // 힌트 수정 전용 API
+    @Operation(summary = "힌트 정답 변경")
+    @PatchMapping("/hint")
+    public ResponseEntity<String> updateHint(@AuthenticationPrincipal Long userId, @RequestBody HintUpdateRequest request) {
+        myPageService.updateHintAnswer(userId, request);
+        return ResponseEntity.ok("힌트 정답이 성공적으로 변경되었습니다.");
     }
 }

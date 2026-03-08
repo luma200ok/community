@@ -46,4 +46,15 @@ public class UserDto {
             String hintAnswer
     ) {
     }
+
+    // 내 정보 수정 요청 DTO
+    public record UserUpdateRequest(
+            @NotBlank(message = "안전한 정보 변경을 위해 현재 비밀번호를 입력해주세요.")
+            String currentPassword,
+
+            // 새 비밀번호나 힌트는 안 바꿀 수도 있으니 @NotBlank를 빼줍니다!
+            String newPassword,
+            String newHintAnswer
+    ) {
+    }
 }

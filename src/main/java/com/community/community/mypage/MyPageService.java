@@ -1,11 +1,14 @@
 package com.community.community.mypage;
 
+import com.community.community.comment.CommentEntity;
 import com.community.community.comment.CommentRepository;
 import com.community.community.exception.CustomException;
 import com.community.community.exception.ErrorCode;
 import com.community.community.like.LikeEntity;
 import com.community.community.like.LikeRepository;
+import com.community.community.post.PostEntity;
 import com.community.community.post.PostRepository;
+import com.community.community.user.UserDto;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static com.community.community.comment.CommentDto.*;
 import static com.community.community.mypage.MyPageDto.*;
@@ -74,5 +79,24 @@ public class MyPageService {
         return likeRepository.findByUserEntity_Id(userId, pageable)
                 .map(LikeEntity::getPostEntity)
                 .map(PostListResponse::from);
+    }
+
+    // 💡 내 기본 정보 조회 추가
+    @Transactional(readOnly = true)
+    public MyPageInfoResponse getMyInfo(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        return MyPageInfoResponse.from(user);
+    }
+
+    // 💡 힌트 정답 수정 추가
+    public void updateHintAnswer(Long userId, HintUpdateRequest request) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new CustomException(ErrorCode.INVALID_PASSWORD);
+        }
+        user.updateHintAnswer(request.newHintAnswer());
     }
 }

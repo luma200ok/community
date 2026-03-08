@@ -35,6 +35,7 @@ function renderHeader() {
 
         authSection.innerHTML = `
             <span style="font-size: 14px; color: #333; margin-right: 10px;"><b>${username}</b>님 환영합니다!</span>
+            <button class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;" onclick="showMyPage()">👤 내 정보</button>
             <button class="btn btn-primary" onclick="toggleForm('write')">✏️ 글쓰기</button>
             <button class="btn btn-text" onclick="logout()">로그아웃</button>
         `;
@@ -50,8 +51,7 @@ function renderHeader() {
 // 💡 2. 화면 섹션 전환 로직 (토글)
 // ==========================================
 function hideAllForms() {
-    // ⭐ 'find-password-section'을 닫기 목록에 확실하게 추가!
-    ['login-section', 'signup-section', 'write-section', 'find-password-section'].forEach(id => {
+    ['login-section', 'signup-section', 'write-section', 'find-password-section','mypage-section'].forEach(id => {
         document.getElementById(id).style.display = 'none';
     });
 }
@@ -535,6 +535,127 @@ async function findPassword() {
             // 에러 메시지(힌트 틀림, 5분 쿨타임 등) 띄워주기
             const errorData = await response.json();
             alert("❌ " + (errorData.message || "정보가 일치하지 않습니다."));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("❌ 서버 통신 중 오류가 발생했습니다.");
+    }
+}
+// ==========================================
+// 💡 9. 마이페이지 (기본 정보 + 활동 내역 통합 조회)
+// ==========================================
+async function showMyPage() {
+    const headers = getAuthHeaders();
+    if (!headers.Authorization) return alert("로그인이 필요합니다!");
+
+    try {
+        // 1. 기본 정보 조회 (/api/mypage/info)
+        const infoRes = await fetch(`${API_BASE}/mypage/info`, { headers });
+        if (infoRes.ok) {
+            const userData = await infoRes.json();
+            document.getElementById("my-username").innerText = userData.username;
+            document.getElementById("my-email").innerText = userData.email;
+            document.getElementById("my-hint").innerText = userData.hintAnswer;
+            document.getElementById("my-role").innerHTML = userData.role === "ADMIN"
+                ? `<span style="color: red; font-weight: bold;">👑 관리자</span>`
+                : "👤 일반 회원";
+        }
+
+        // 2. 활동 내역 조회 (Promise.all로 병렬 호출하여 속도 업!)
+        // 백엔드 MyPageController의 @GetMapping("/posts", "/comments", "/likes")를 각각 찌릅니다.
+        const [postsRes, commentsRes, likesRes] = await Promise.all([
+            fetch(`${API_BASE}/mypage/posts?page=0&size=5`, { headers }),
+            fetch(`${API_BASE}/mypage/comments?page=0&size=5`, { headers }),
+            fetch(`${API_BASE}/mypage/likes?page=0&size=5`, { headers })
+        ]);
+
+        // 3. 내가 쓴 게시글 렌더링 (Spring Page 객체이므로 .content에 데이터가 있음)
+        if (postsRes.ok) {
+            const data = await postsRes.json();
+            const postsDiv = document.getElementById("my-posts-list");
+            postsDiv.innerHTML = data.content.length > 0
+                ? data.content.map(p => `<div class="link-text" onclick="viewPost(${p.id})" style="margin-bottom:5px;">• ${p.title}</div>`).join('')
+                : "작성한 게시글이 없습니다.";
+        }
+
+        // 4. 내가 쓴 댓글 렌더링
+        if (commentsRes.ok) {
+            const data = await commentsRes.json();
+            const commentsDiv = document.getElementById("my-comments-list");
+            commentsDiv.innerHTML = data.content.length > 0
+                ? data.content.map(c => `
+        <div class="link-text" onclick="viewPost(${c.postId})" style="margin-bottom:8px; padding:10px; background:#f8f9fa; border-radius:6px; cursor:pointer;">
+            <small style="color:#666;">📝 내가 쓴 댓글:</small><br>
+            <strong>${c.content}</strong>
+        </div>
+    `).join('')
+                : "작성한 댓글이 없습니다.";
+        }
+
+        // 5. 좋아요 누른 게시글 렌더링
+        if (likesRes.ok) {
+            const data = await likesRes.json();
+            const likesDiv = document.getElementById("my-liked-list");
+            likesDiv.innerHTML = data.content.length > 0
+                ? data.content.map(p => `<div class="link-text" onclick="viewPost(${p.id})" style="margin-bottom:5px;">❤️ ${p.title}</div>`).join('')
+                : "좋아요 표시한 게시글이 없습니다.";
+        }
+
+        // 화면 전환
+        hideAllForms();
+        document.getElementById('list-section').style.display = 'none';
+        document.getElementById('detail-section').style.display = 'none';
+        document.getElementById("mypage-section").style.display = "block";
+
+    } catch (error) {
+        console.error("마이페이지 로딩 에러:", error);
+        alert("데이터를 불러오는 중 오류가 발생했습니다.");
+    }
+}
+
+// ==========================================
+// 💡 10. 내 정보 수정 (비밀번호, 힌트)
+// ==========================================
+
+// 수정 폼 토글
+function toggleUpdateForm() {
+    const form = document.getElementById("update-form");
+    form.style.display = form.style.display === "none" ? "block" : "none";
+}
+
+// 실제 수정 API 호출
+async function updateUserInfo() {
+    const currentPassword = document.getElementById("upd-current-pw").value;
+    const newPassword = document.getElementById("upd-new-pw").value;
+    const newHintAnswer = document.getElementById("upd-new-hint").value;
+
+    if (!currentPassword) {
+        return alert("보안을 위해 현재 비밀번호를 반드시 입력해야 합니다.");
+    }
+
+    const headers = getAuthHeaders();
+    headers["Content-Type"] = "application/json";
+
+    try {
+        const response = await fetch(`${API_BASE}/mypage/password`, {
+            method: "PATCH",
+            headers: headers,
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        if (response.ok) {
+            alert("🎉 정보가 성공적으로 수정되었습니다! 보안을 위해 다시 로그인 해주세요.");
+
+            // 입력 필드 초기화
+            document.getElementById("upd-current-pw").value = "";
+            document.getElementById("upd-new-pw").value = "";
+            document.getElementById("upd-new-hint").value = "";
+
+            logout(); // 정보 변경 후 재로그인 유도
+        } else {
+            // 백엔드에서 던지는 에러 메시지 확인 (현재 비밀번호 불일치 등)
+            const errorText = await response.text();
+            alert("❌ 수정 실패: " + (errorText || "비밀번호가 틀렸거나 입력값이 잘못되었습니다."));
         }
     } catch (error) {
         console.error(error);

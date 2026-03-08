@@ -55,6 +55,48 @@
             </div>
         </div>
 
+        <div class="section form-card" id="mypage-section" style="display: none;">
+            <h3 style="text-align: center;">👤 내 정보 (마이페이지)</h3>
+
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <p><strong>아이디:</strong> <span id="my-username"></span></p>
+                <p><strong>이메일:</strong> <span id="my-email"></span></p>
+                <p><strong>등급:</strong> <span id="my-role"></span></p>
+                <p><strong>현재 힌트 정답:</strong> <span id="my-hint"></span></p>
+            </div>
+
+            <div id="update-form" style="display: none; border-top: 1px solid #eee; pt: 20px; margin-top: 20px;">
+                <h4 style="margin-bottom: 15px;">🛠️ 정보 수정</h4>
+                <input type="password" id="upd-current-pw" class="input-box" placeholder="현재 비밀번호 (필수)">
+                <input type="password" id="upd-new-pw" class="input-box" placeholder="새 비밀번호 (변경 시만 입력)">
+                <input type="text" id="upd-new-hint" class="input-box" placeholder="새 힌트 정답 (변경 시만 입력)">
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="updateUserInfo()">수정 적용하기</button>
+            </div>
+
+            <div style="display: flex; gap: 10px;" id="mypage-btns">
+                <button class="btn btn-outline" style="flex: 1;" onclick="showList()">🔙 목록으로</button>
+                <button class="btn btn-primary" style="flex: 1; background-color: #ff9800; border-color: #ff9800;" onclick="toggleUpdateForm()">🔐 정보 수정하기</button>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h4 style="border-bottom: 2px solid #333; padding-bottom: 10px;">📋 나의 활동 내역</h4>
+
+                <div style="margin-top: 15px;">
+                    <h5>✍️ 내가 쓴 게시글</h5>
+                    <div id="my-posts-list" style="font-size: 0.9em; color: #555;">조회 중...</div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h5>💬 내가 쓴 댓글</h5>
+                    <div id="my-comments-list" style="font-size: 0.9em; color: #555;">조회 중...</div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h5>❤️ 좋아요 누른 게시글</h5>
+                    <div id="my-liked-list" style="font-size: 0.9em; color: #555;">조회 중...</div>
+                </div>
+            </div>
+        </div>
+
         <div class="section form-card" id="write-section" style="display: none;">
             <h3>✏️ 새 게시글 작성</h3>
             <input type="text" id="title" class="input-box" placeholder="게시글 제목">

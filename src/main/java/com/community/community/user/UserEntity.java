@@ -80,8 +80,13 @@ public class UserEntity {
         return java.time.Duration.between(this.lastEmailSentAt, LocalDateTime.now()).toMinutes() >= 5;
     }
 
-    //  메일 발송 시간 갱신 편의 메서드
+    // 메일 발송 시간 갱신 편의 메서드
     public void updateEmailSentAt() {
         this.lastEmailSentAt = LocalDateTime.now();
+    }
+
+    // 힌트 정답 변경 편의 메서드
+    public void updateHintAnswer(String hintAnswer) {
+        this.hintAnswer = hintAnswer;
     }
 }
