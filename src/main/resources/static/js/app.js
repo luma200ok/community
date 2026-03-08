@@ -624,7 +624,8 @@ function toggleUpdateForm() {
 
 // 실제 수정 API 호출
 async function updateUserInfo() {
-    const currentPassword = document.getElementById("upd-current-pw").value;
+    // 💡 const를 let으로 변경하여 변수 값을 중간에 바꿀 수 있게 합니다!
+    let currentPassword = document.getElementById("upd-current-pw").value;
     const newPassword = document.getElementById("upd-new-pw").value;
     const newHintAnswer = document.getElementById("upd-new-hint").value;
 
@@ -636,7 +637,7 @@ async function updateUserInfo() {
     headers["Content-Type"] = "application/json";
 
     try {
-        // 1. 비밀번호 변경 (새 비밀번호 칸이 비어있지 않을 때만 호출)
+        // 1. 비밀번호 변경
         if (newPassword && newPassword.trim() !== "") {
             const pwRes = await fetch(`${API_BASE}/mypage/password`, {
                 method: "PATCH",
@@ -644,14 +645,18 @@ async function updateUserInfo() {
                 body: JSON.stringify({ currentPassword, newPassword })
             });
             if (!pwRes.ok) throw new Error("비밀번호 수정 실패");
+
+            // ⭐ 핵심 로직 추가: 비밀번호가 성공적으로 바뀌었다면,
+            // 2번(힌트) API 본인 인증을 무사히 통과하기 위해 현재 비밀번호를 방금 바꾼 새 비밀번호로 덮어씌웁니다!
+            currentPassword = newPassword;
         }
 
-        // 2. 힌트 정답 변경 (새 힌트 칸이 비어있지 않을 때만 호출)
+        // 2. 힌트 정답 변경
         if (newHintAnswer && newHintAnswer.trim() !== "") {
             const hintRes = await fetch(`${API_BASE}/mypage/hint`, {
                 method: "PATCH",
                 headers: headers,
-                body: JSON.stringify({ currentPassword, newHintAnswer })
+                body: JSON.stringify({ currentPassword, newHintAnswer }) // 💡 이제 업데이트된 비번이 날아감!
             });
             if (!hintRes.ok) throw new Error("힌트 수정 실패");
         }
