@@ -403,7 +403,11 @@ async function toggleLike() {
     const headers = getAuthHeaders();
     if (!headers.Authorization) return alert("로그인이 필요합니다!");
     try {
-        await fetch(`${API_BASE}/posts/${currentPostId}/likes`, { method: "POST", headers: headers });
+        // 💡 일반 fetch -> fetchWithAuth 로 변경!
+        await fetchWithAuth(`${API_BASE}/posts/${currentPostId}/likes`, {
+            method: "POST",
+            headers: headers
+        });
         viewPost(currentPostId);
     } catch (error) { console.error(error); }
 }
@@ -417,12 +421,17 @@ async function writeComment() {
     headers["Content-Type"] = "application/json";
 
     try {
-        const response = await fetch(`${API_BASE}/posts/${currentPostId}/comments`, {
+        // 💡 일반 fetch -> fetchWithAuth 로 변경!
+        const response = await fetchWithAuth(`${API_BASE}/posts/${currentPostId}/comments`, {
             method: "POST", headers: headers,
             body: JSON.stringify({ content })
         });
-        if (response.ok) { document.getElementById("comment-input").value = ""; viewPost(currentPostId); }
-        else { alert("댓글 작성 실패!"); }
+        if (response.ok) {
+            document.getElementById("comment-input").value = "";
+            viewPost(currentPostId);
+        } else {
+            alert("댓글 작성 실패!");
+        }
     } catch (error) { console.error(error); }
 }
 
@@ -431,8 +440,8 @@ async function deleteComment(commentId) {
     const headers = getAuthHeaders();
     if (!headers.Authorization) return alert("로그인이 필요합니다!");
     try {
-        // 💡 게시글 번호(currentPostId)를 주소에 추가했습니다!
-        const response = await fetch(`${API_BASE}/posts/${currentPostId}/comments/${commentId}`, { method: "DELETE", headers: headers });
+        // 💡 일반 fetch 대신 fetchWithAuth 사용!
+        const response = await fetchWithAuth(`${API_BASE}/posts/${currentPostId}/comments/${commentId}`, { method: "DELETE", headers: headers });
         if (response.ok) viewPost(currentPostId);
         else alert("권한이 없습니다!");
     } catch (error) { console.error(error); }
@@ -443,7 +452,8 @@ async function deletePost() {
     const headers = getAuthHeaders();
     if (!headers.Authorization) return alert("로그인이 필요합니다!");
     try {
-        const response = await fetch(`${API_BASE}/posts/${currentPostId}`, { method: "DELETE", headers: headers });
+        // 💡 일반 fetch 대신 fetchWithAuth 사용!
+        const response = await fetchWithAuth(`${API_BASE}/posts/${currentPostId}`, { method: "DELETE", headers: headers });
         if (response.ok) { alert("게시글이 삭제되었습니다."); showList(); }
         else { alert("권한이 없습니다!"); }
     } catch (error) { console.error(error); }
@@ -471,20 +481,33 @@ function cancelEdit() {
 async function updatePost() {
     const title = document.getElementById("edit-title").value;
     const content = document.getElementById("edit-content").value;
-    const imageInput = document.getElementById("edit-imageFile");
     const headers = getAuthHeaders();
     if (!headers.Authorization) return alert("로그인이 필요합니다!");
 
     const formData = new FormData();
     formData.append("request", new Blob([JSON.stringify({ title, content })], { type: "application/json" }));
 
-    // 💡 [수정됨] 여기도 동일하게 반복문 처리!
-        accumulatedFiles.forEach(file => formData.append("images", file));
+    accumulatedFiles.forEach(file => formData.append("images", file));
+
     try {
-        const response = await fetch(`${API_BASE}/posts/${currentPostId}`, { method: "PUT", headers: headers, body: formData });
-        if (response.ok) { alert("수정 성공!"); document.getElementById("edit-section").style.display = "none"; viewPost(currentPostId); }
-        else { alert("권한이 없습니다!"); }
-    } catch (error) { console.error(error); }
+        // 💡 1. 일반 fetch 대신 'fetchWithAuth' 로 변경 (헤더 자동처리)
+        const response = await fetchWithAuth(`${API_BASE}/posts/${currentPostId}`, {
+            method: "PUT",
+            body: formData
+        });
+
+        if (response.ok) {
+            alert("수정 성공!");
+            document.getElementById("edit-section").style.display = "none";
+            viewPost(currentPostId);
+        } else {
+            // 💡 2. 무조건 "권한이 없습니다"가 아니라, 백엔드가 보낸 진짜 이유를 띄우도록 수정
+            const errorData = await response.json().catch(() => ({}));
+            alert("수정 실패: " + (errorData.message || "권한이 없습니다!"));
+        }
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 // 💡 화면 켜지자마자 실행되는 곳
@@ -590,7 +613,8 @@ async function writeReply(parentId) {
     headers["Content-Type"] = "application/json";
 
     try {
-        const response = await fetch(`${API_BASE}/posts/${currentPostId}/comments/${parentId}/replies`, {
+        // 💡 일반 fetch -> fetchWithAuth 로 변경!
+        const response = await fetchWithAuth(`${API_BASE}/posts/${currentPostId}/comments/${parentId}/replies`, {
             method: "POST",
             headers: headers,
             body: JSON.stringify({ content })
@@ -600,7 +624,7 @@ async function writeReply(parentId) {
             // 성공하면 게시글 상세 화면을 새로고침하여 바뀐 댓글 목록을 보여줌
             viewPost(currentPostId);
         } else {
-            alert("답글 작성 실패!");
+            alert("답글 작성 실패! (권한이 없거나 토큰이 만료되었습니다.)");
         }
     } catch (error) { console.error(error); }
 }
@@ -654,8 +678,8 @@ async function showMyPage() {
     if (!headers.Authorization) return alert("로그인이 필요합니다!");
 
     try {
-        // 1. 기본 정보 조회 (/api/mypage/info)
-        const infoRes = await fetch(`${API_BASE}/mypage/info`, { headers });
+        // 1. 기본 정보 조회 (💡 fetch -> fetchWithAuth 로 변경!)
+        const infoRes = await fetchWithAuth(`${API_BASE}/mypage/info`, { headers });
         if (infoRes.ok) {
             const userData = await infoRes.json();
             document.getElementById("my-username").innerText = userData.username;
@@ -666,15 +690,14 @@ async function showMyPage() {
                 : "👤 일반 회원";
         }
 
-        // 2. 활동 내역 조회 (Promise.all로 병렬 호출하여 속도 업!)
-        // 백엔드 MyPageController의 @GetMapping("/posts", "/comments", "/likes")를 각각 찌릅니다.
+        // 2. 활동 내역 조회 (💡 병렬 호출 내부도 전부 fetchWithAuth 로 변경!)
         const [postsRes, commentsRes, likesRes] = await Promise.all([
-            fetch(`${API_BASE}/mypage/posts?page=0&size=5`, { headers }),
-            fetch(`${API_BASE}/mypage/comments?page=0&size=5`, { headers }),
-            fetch(`${API_BASE}/mypage/likes?page=0&size=5`, { headers })
+            fetchWithAuth(`${API_BASE}/mypage/posts?page=0&size=5`, { headers }),
+            fetchWithAuth(`${API_BASE}/mypage/comments?page=0&size=5`, { headers }),
+            fetchWithAuth(`${API_BASE}/mypage/likes?page=0&size=5`, { headers })
         ]);
 
-        // 3. 내가 쓴 게시글 렌더링 (Spring Page 객체이므로 .content에 데이터가 있음)
+        // 3. 내가 쓴 게시글 렌더링
         if (postsRes.ok) {
             const data = await postsRes.json();
             const postsDiv = document.getElementById("my-posts-list");
@@ -716,7 +739,6 @@ async function showMyPage() {
         alert("데이터를 불러오는 중 오류가 발생했습니다.");
     }
 }
-
 // ==========================================
 // 💡 10. 내 정보 수정 (비밀번호, 힌트)
 // ==========================================
@@ -729,7 +751,6 @@ function toggleUpdateForm() {
 
 // 실제 수정 API 호출
 async function updateUserInfo() {
-    // 💡 const를 let으로 변경하여 변수 값을 중간에 바꿀 수 있게 합니다!
     let currentPassword = document.getElementById("upd-current-pw").value;
     const newPassword = document.getElementById("upd-new-pw").value;
     const newHintAnswer = document.getElementById("upd-new-hint").value;
@@ -742,26 +763,24 @@ async function updateUserInfo() {
     headers["Content-Type"] = "application/json";
 
     try {
-        // 1. 비밀번호 변경
+        // 1. 비밀번호 변경 (💡 fetch -> fetchWithAuth 로 변경!)
         if (newPassword && newPassword.trim() !== "") {
-            const pwRes = await fetch(`${API_BASE}/mypage/password`, {
+            const pwRes = await fetchWithAuth(`${API_BASE}/mypage/password`, {
                 method: "PATCH",
                 headers: headers,
                 body: JSON.stringify({ currentPassword, newPassword })
             });
             if (!pwRes.ok) throw new Error("비밀번호 수정 실패");
 
-            // ⭐ 핵심 로직 추가: 비밀번호가 성공적으로 바뀌었다면,
-            // 2번(힌트) API 본인 인증을 무사히 통과하기 위해 현재 비밀번호를 방금 바꾼 새 비밀번호로 덮어씌웁니다!
             currentPassword = newPassword;
         }
 
-        // 2. 힌트 정답 변경
+        // 2. 힌트 정답 변경 (💡 fetch -> fetchWithAuth 로 변경!)
         if (newHintAnswer && newHintAnswer.trim() !== "") {
-            const hintRes = await fetch(`${API_BASE}/mypage/hint`, {
+            const hintRes = await fetchWithAuth(`${API_BASE}/mypage/hint`, {
                 method: "PATCH",
                 headers: headers,
-                body: JSON.stringify({ currentPassword, newHintAnswer }) // 💡 이제 업데이트된 비번이 날아감!
+                body: JSON.stringify({ currentPassword, newHintAnswer })
             });
             if (!hintRes.ok) throw new Error("힌트 수정 실패");
         }
