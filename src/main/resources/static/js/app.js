@@ -1,5 +1,6 @@
 const API_BASE = "/api";
-let currentPostId = null;
+let currentPostId = null
+let accumulatedFiles = [];
 
 // ==========================================
 // 💡 0. 토큰 안전하게 가져오기 (JS 에러 방어용!)
@@ -71,9 +72,17 @@ function toggleForm(type) {
     if (type === 'write') {
         const headers = getAuthHeaders();
         if(!headers.Authorization) {
-            showList(); // 로그인 안 했으면 튕겨내고 다시 목록 보여주기
+            showList();
             return alert("로그인이 필요합니다!");
         }
+        // 💡 새 글 쓸 때 이전 텍스트와 사진 흔적 날리기!
+        document.getElementById("title").value = "";
+        document.getElementById("content").value = "";
+        document.getElementById("imageFile").value = "";
+        accumulatedFiles = []; // 장바구니 비우기
+        document.getElementById("write-file-count").innerHTML = ""; // 갯수 텍스트 지우기
+        document.getElementById("write-image-preview").innerHTML = ""; // 도화지 지우기
+
         document.getElementById('write-section').style.display = 'block';
     }
 }
@@ -157,8 +166,9 @@ async function writePost() {
 
     const formData = new FormData();
     formData.append("request", new Blob([JSON.stringify({ title, content })], { type: "application/json" }));
-    if (imageInput.files.length > 0) formData.append("images", imageInput.files[0]);
 
+    // 💡 [수정됨] 여러 파일을 반복문을 통해 전부 append 합니다. (키 이름은 "images"로 동일하게 유지!)
+    accumulatedFiles.forEach(file => formData.append("images", file));
     try {
         const response = await fetch(`${API_BASE}/posts`, {
             method: "POST",
@@ -237,8 +247,23 @@ async function viewPost(postId) {
 
         const imgDiv = document.getElementById("detail-images");
         imgDiv.innerHTML = "";
+
         post.imageUrls.forEach(url => {
-            imgDiv.innerHTML += `<img src="${url}" style="max-width: 100%; border-radius: 8px; margin-bottom: 15px;">`;
+            // 💡 URL 끝자리가 .pdf 인지 확인!
+            if (url.toLowerCase().endsWith(".pdf")) {
+                // PDF면 예쁜 다운로드 링크 박스로 표시
+                imgDiv.innerHTML += `
+                    <div style="margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background-color: #fff5f5; display: inline-block;">
+                        <span style="font-size: 20px; vertical-align: middle;">📄</span>
+                        <a href="${url}" target="_blank" style="color: #dc3545; text-decoration: none; font-weight: bold; margin-left: 8px;">
+                            첨부된 PDF 파일 보기 / 다운로드
+                        </a>
+                    </div><br>
+                `;
+            } else {
+                // 사진이면 기존처럼 이미지 렌더링
+                imgDiv.innerHTML += `<img src="${url}" style="max-width: 100%; border-radius: 8px; margin-bottom: 15px;">`;
+            }
         });
 
         const likeBtn = document.getElementById("like-btn");
@@ -364,8 +389,15 @@ async function deletePost() {
 function showEditForm() {
     document.getElementById("detail-section").style.display = "none";
     document.getElementById("edit-section").style.display = "block";
+
     document.getElementById("edit-title").value = document.getElementById("detail-title").innerText;
     document.getElementById("edit-content").value = document.getElementById("detail-content").innerText;
+
+    // 💡 수정 창 열 때마다 첨부파일 입력칸과 도화지 깨끗하게 비우기!
+    document.getElementById("edit-imageFile").value = ""
+    accumulatedFiles = []; // 장바구니 비우기
+    document.getElementById("edit-file-count").innerHTML = ""; // 갯수 텍스트 지우기
+    document.getElementById("edit-image-preview").innerHTML = "";
 }
 
 function cancelEdit() {
@@ -382,8 +414,9 @@ async function updatePost() {
 
     const formData = new FormData();
     formData.append("request", new Blob([JSON.stringify({ title, content })], { type: "application/json" }));
-    if (imageInput.files.length > 0) formData.append("images", imageInput.files[0]);
 
+    // 💡 [수정됨] 여기도 동일하게 반복문 처리!
+        accumulatedFiles.forEach(file => formData.append("images", file));
     try {
         const response = await fetch(`${API_BASE}/posts/${currentPostId}`, { method: "PUT", headers: headers, body: formData });
         if (response.ok) { alert("수정 성공!"); document.getElementById("edit-section").style.display = "none"; viewPost(currentPostId); }
@@ -397,6 +430,15 @@ window.onload = function() {
     renderHeader();
     fetchPosts();
 };
+
+function updateFileName(input) {
+    const countDiv = document.getElementById("file-count");
+    if (input.files.length > 0) {
+        countDiv.innerText = `✅ 총 ${input.files.length}장의 사진이 선택되었습니다.`;
+    } else {
+        countDiv.innerText = "";
+    }
+}
 
 // ==========================================
 // 💡 6. 관리자 이스터에그 (로고 5번 클릭)
@@ -673,5 +715,104 @@ async function updateUserInfo() {
     } catch (error) {
         console.error(error);
         alert("❌ 수정 실패: 현재 비밀번호가 틀렸거나 통신 오류가 발생했습니다.");
+    }
+}
+
+// ==========================================
+// 💡 11. 다중 이미지 누적 추가 및 미리보기 로직
+// ==========================================
+function handleFileSelect(input, previewBoxId, countBoxId) {
+    if (!input.files || input.files.length === 0) return;
+
+    // 1. 새로 선택된 파일들을 장바구니(accumulatedFiles)에 누적!
+    Array.from(input.files).forEach(file => {
+        accumulatedFiles.push(file);
+    });
+
+    // 2. 같은 파일을 또 고를 수 있도록 input 창 초기화
+    input.value = "";
+
+    // 3. 화면 다시 그리기
+    updatePreviewUI(previewBoxId, countBoxId);
+}
+function updatePreviewUI(previewBoxId, countBoxId) {
+    const previewBox = document.getElementById(previewBoxId);
+    const countBox = document.getElementById(countBoxId);
+
+    previewBox.innerHTML = ""; // 도화지 비우기
+
+    if (accumulatedFiles.length > 0) {
+        countBox.innerHTML = `✅ 총 <b>${accumulatedFiles.length}개</b>의 파일이 선택되었습니다.`;
+
+        accumulatedFiles.forEach((file, index) => {
+            const div = document.createElement("div");
+            div.style.position = "relative";
+            div.style.display = "inline-block";
+
+            // 💡 1. 만약 파일이 이미지라면? (기존처럼 사진 렌더링)
+            if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement("img");
+                    img.src = e.target.result;
+                    img.style.width = "100px";
+                    img.style.height = "100px";
+                    img.style.objectFit = "cover";
+                    img.style.borderRadius = "8px";
+                    img.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+                    div.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+            // 💡 2. 만약 파일이 PDF라면? (예쁜 빨간색 PDF 박스 렌더링)
+            else if (file.type === "application/pdf") {
+                const pdfBox = document.createElement("div");
+                pdfBox.style.width = "100px";
+                pdfBox.style.height = "100px";
+                pdfBox.style.backgroundColor = "#ffcccc"; // 연한 빨간색 배경
+                pdfBox.style.color = "#cc0000"; // 진한 빨간색 글씨
+                pdfBox.style.display = "flex";
+                pdfBox.style.flexDirection = "column";
+                pdfBox.style.alignItems = "center";
+                pdfBox.style.justifyContent = "center";
+                pdfBox.style.borderRadius = "8px";
+                pdfBox.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+                pdfBox.style.padding = "5px";
+                pdfBox.style.boxSizing = "border-box";
+                pdfBox.style.textAlign = "center";
+
+                // 긴 파일 이름은 중간을 자르고 보여줌
+                const shortName = file.name.length > 10 ? file.name.substring(0, 10) + "..." : file.name;
+                pdfBox.innerHTML = `<span style="font-size: 24px;">📄</span><br><span style="font-size: 11px; font-weight: bold; margin-top: 5px; word-break: break-all;">${shortName}</span>`;
+
+                div.appendChild(pdfBox);
+            }
+
+            // 💡 3. 개별 삭제 [X] 버튼 (이미지/PDF 공통)
+            const delBtn = document.createElement("button");
+            delBtn.innerHTML = "X";
+            delBtn.style.position = "absolute";
+            delBtn.style.top = "5px";
+            delBtn.style.right = "5px";
+            delBtn.style.background = "rgba(255,0,0,0.8)";
+            delBtn.style.color = "white";
+            delBtn.style.border = "none";
+            delBtn.style.borderRadius = "50%";
+            delBtn.style.width = "22px";
+            delBtn.style.height = "22px";
+            delBtn.style.fontSize = "12px";
+            delBtn.style.cursor = "pointer";
+            delBtn.style.zIndex = "10"; // 버튼이 사진/아이콘 위에 무조건 뜨도록!
+
+            delBtn.onclick = function() {
+                accumulatedFiles.splice(index, 1); // 장바구니에서 삭제
+                updatePreviewUI(previewBoxId, countBoxId); // 화면 다시 그리기
+            };
+
+            div.appendChild(delBtn);
+            previewBox.appendChild(div);
+        });
+    } else {
+        countBox.innerHTML = ""; // 다 지우면 텍스트 숨김
     }
 }

@@ -101,8 +101,12 @@
             <h3>✏️ 새 게시글 작성</h3>
             <input type="text" id="title" class="input-box" placeholder="게시글 제목">
             <textarea id="content" class="input-box" rows="4" placeholder="게시글 내용"></textarea>
-            <input type="file" id="imageFile" accept="image/*" style="margin-bottom: 10px;">
-
+            <input type="file" id="imageFile" accept="image/*, application/pdf" multiple style="display: none;" onchange="handleFileSelect(this, 'write-image-preview', 'write-file-count')">
+            <label for="imageFile" class="btn btn-outline" style="display: block; text-align: center; margin-bottom: 10px; border: 2px dashed #ccc; cursor: pointer;">
+                📸 여기를 눌러 사진 추가하기 (계속 추가 가능!)
+            </label>
+            <div id="write-file-count" style="font-size: 13px; color: #28a745; text-align: center; margin-bottom: 10px;"></div>
+            <div id="write-image-preview" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;"></div>
             <div style="display: flex; gap: 10px;">
                 <button class="btn btn-primary" style="flex: 1;" onclick="writePost()">게시글 등록하기</button>
                 <button class="btn btn-outline" style="flex: 1;" onclick="showList()">취소</button>
@@ -135,7 +139,7 @@
         <div id="detail-meta" class="post-meta" style="margin-bottom: 20px;">작성자 정보</div>
         <div id="detail-images"></div>
         <p id="detail-content"
-           style="font-size: 1.1em; line-height: 1.6; margin-bottom: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+           style="font-size: 1.1em; line-height: 1.6; margin-bottom: 30px; white-space: pre-wrap;">
             내용</p>
 
         <div style="text-align: center; margin-bottom: 30px;">
@@ -150,13 +154,21 @@
             <input type="text" id="comment-input" class="input-box" placeholder="댓글을 입력하세요" style="flex: 1; margin: 0;">
             <button class="btn btn-primary" onclick="writeComment()">작성</button>
         </div>
+
+        <button class="btn btn-outline" onclick="showList()" style="width: 100%; margin-top: 30px;">🔙 목록으로 돌아가기</button>
     </div>
 
     <div class="section form-card" id="edit-section" style="display: none;">
         <h3>🛠️ 게시글 수정</h3>
         <input type="text" id="edit-title" class="input-box" placeholder="게시글 제목">
         <textarea id="edit-content" class="input-box" rows="4" placeholder="게시글 내용"></textarea>
-        <input type="file" id="edit-imageFile" accept="image/*" style="margin-bottom: 10px;">
+        <input type="file" id="edit-imageFile" accept="image/*application/pdf" multiple style="display: none;" onchange="handleFileSelect(this, 'edit-image-preview', 'edit-file-count')">
+        <label for="edit-imageFile" class="btn btn-outline" style="display: block; text-align: center; margin-bottom: 10px; border: 2px dashed #ccc; cursor: pointer;">
+            📸 여기를 눌러 사진 추가하기 (계속 추가 가능!)
+        </label>
+        <div id="edit-file-count" style="font-size: 13px; color: #28a745; text-align: center; margin-bottom: 10px;"></div>
+        <div id="edit-image-preview" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;"></div>
+
         <div style="display: flex; gap: 10px;">
             <button class="btn btn-primary" style="flex: 1;" onclick="updatePost()">수정 완료</button>
             <button class="btn btn-outline" style="flex: 1;" onclick="cancelEdit()">취소</button>
