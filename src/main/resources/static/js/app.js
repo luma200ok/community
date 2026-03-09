@@ -15,6 +15,62 @@ function getAuthHeaders() {
 }
 
 // ==========================================
+// 💡 0-1. 스마트 API 요청 함수 (토큰 만료 시 자동 재발급 및 재요청!)
+// ==========================================
+async function fetchWithAuth(url, options = {}) {
+    // 1. 요청할 때마다 현재 Access Token을 헤더에 자동 세팅
+    if (!options.headers) options.headers = {};
+    const headers = getAuthHeaders();
+    if (headers.Authorization) {
+        options.headers["Authorization"] = headers.Authorization;
+    }
+
+    // 2. 일단 서버로 1차 요청을 쏴봅니다.
+    let response = await fetch(url, options);
+
+    // 3. 만약 "401 Unauthorized (토큰 만료)" 에러가 떴다면?!
+    if (response.status === 401) {
+        const refreshToken = localStorage.getItem("refreshToken");
+
+        // 리프레시 토큰조차 없으면 찐 로그아웃 처리
+        if (!refreshToken) {
+            alert("로그인이 필요합니다.");
+            logout();
+            return response;
+        }
+
+        try {
+            // 💡 4. 사용자 몰래 조용히 '토큰 재발급(reissue)' API를 찌릅니다.
+            const reissueRes = await fetch(`${API_BASE}/users/reissue`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ refreshToken })
+            });
+
+            if (reissueRes.ok) {
+                // 🎉 재발급 성공! 새 토큰들을 스토리지에 덮어씌웁니다.
+                const data = await reissueRes.json();
+                localStorage.setItem("accessToken", data.accessToken);
+                localStorage.setItem("refreshToken", data.refreshToken);
+
+                // 💡 5. 아까 실패했던 원래 요청의 헤더를 '새 토큰'으로 갈아끼우고 2차 재요청(Retry)!
+                options.headers["Authorization"] = "Bearer " + data.accessToken;
+                response = await fetch(url, options);
+
+            } else {
+                // 리프레시 토큰마저 만료된 경우 (진짜 세션 끝남)
+                alert("안전한 이용을 위해 다시 로그인 해주세요. (세션 만료)");
+                logout();
+            }
+        } catch (error) {
+            console.error("토큰 재발급 중 오류:", error);
+            logout();
+        }
+    }
+    return response; // 성공했든 실패했든 최종 결과를 반환
+}
+
+// ==========================================
 // 💡 1. JWT 파싱 및 상단 헤더 UI 렌더링
 // ==========================================
 function parseJwt(token) {
@@ -130,8 +186,8 @@ async function login() {
         if (response.ok) {
             const data = await response.json();
             localStorage.setItem("accessToken", data.accessToken);
-            // ⭐ 이 줄을 추가하세요! 로그인 성공 시 입력한 아이디를 기억해둡니다.
             localStorage.setItem("username", username);
+            localStorage.setItem("refreshToken", data.refreshToken); // ⭐ 추가: 리프레시 토큰도 저장!
 
             alert("로그인 성공!");
             renderHeader(); // 1. 헤더를 먼저 'ㅇㅇ님 환영합니다'로 바꾸고
@@ -149,6 +205,7 @@ async function logout() {
         await fetch(`${API_BASE}/users/logout`, { method: "POST", headers: headers });
     }
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken"); // ⭐ 추가: 로그아웃 시 같이 폐기!
     alert("로그아웃 되었습니다.");
     location.reload();
 }
@@ -170,9 +227,9 @@ async function writePost() {
     // 💡 [수정됨] 여러 파일을 반복문을 통해 전부 append 합니다. (키 이름은 "images"로 동일하게 유지!)
     accumulatedFiles.forEach(file => formData.append("images", file));
     try {
-        const response = await fetch(`${API_BASE}/posts`, {
+        // 💡 fetch 대신 fetchWithAuth 사용! (헤더도 함수가 알아서 넣어주므로 뺄 수 있습니다)
+        const response = await fetchWithAuth(`${API_BASE}/posts`, {
             method: "POST",
-            headers: headers,
             body: formData
         });
         if (response.ok) {
@@ -185,20 +242,24 @@ async function writePost() {
     } catch (error) { console.error(error); }
 }
 
-async function fetchPosts() {
+async function fetchPosts(page = 0) {
     try {
         const keyword = document.getElementById("search-keyword").value;
-        let url = keyword.trim() !== "" ? `${API_BASE}/posts?keyword=${encodeURIComponent(keyword)}` : `${API_BASE}/posts`;
+        // 💡 주소 뒤에 page 파라미터를 붙여서 서버에 요청!
+        let url = keyword.trim() !== ""
+            ? `${API_BASE}/posts?keyword=${encodeURIComponent(keyword)}&page=${page}&size=9`
+            : `${API_BASE}/posts?page=${page}&size=9`;
 
         const response = await fetch(url);
         const data = await response.json();
-        const posts = data.content;
+        const posts = data.content; // 실제 게시글 데이터
 
         const postListDiv = document.getElementById("post-list");
         postListDiv.innerHTML = "";
 
         if (posts.length === 0) {
             postListDiv.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#777;'>게시글이 없습니다.</p>";
+            document.getElementById("pagination").innerHTML = ""; // 글이 없으면 페이징도 숨김
             return;
         }
 
@@ -222,6 +283,8 @@ async function fetchPosts() {
             `;
             postListDiv.innerHTML += postHtml;
         });
+        renderPagination(data.totalPages, data.number);
+
     } catch (error) { console.error(error); }
 }
 
@@ -814,5 +877,35 @@ function updatePreviewUI(previewBoxId, countBoxId) {
         });
     } else {
         countBox.innerHTML = ""; // 다 지우면 텍스트 숨김
+    }
+}
+
+// ==========================================
+// 💡 12. 게시글 페이징 (페이지 번호 그리기)
+// ==========================================
+function renderPagination(totalPages, currentPage) {
+    const paginationDiv = document.getElementById("pagination");
+    paginationDiv.innerHTML = ""; // 기존 버튼들 초기화
+
+    // 페이지가 1페이지(0) 이하면 굳이 버튼을 그릴 필요 없음
+    if (totalPages <= 1) return;
+
+    for (let i = 0; i < totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.innerText = i + 1; // 화면에는 1부터 보이게!
+
+        // 현재 보고 있는 페이지면 파란색(primary), 아니면 하얀색(outline) 버튼으로 색상 구분
+        if (i === currentPage) {
+            btn.className = "btn btn-primary";
+            btn.style.cursor = "default"; // 현재 페이지는 눌러도 반응 없게
+        } else {
+            btn.className = "btn btn-outline";
+            btn.onclick = () => {
+                fetchPosts(i); // 💡 다른 페이지 버튼을 누르면 해당 페이지 조회!
+                window.scrollTo(0, 0); // 페이지를 이동하면 화면 맨 위로 끌어올려줌
+            };
+        }
+
+        paginationDiv.appendChild(btn);
     }
 }

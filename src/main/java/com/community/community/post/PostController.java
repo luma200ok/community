@@ -124,9 +124,9 @@ public class PostController {
             @RequestParam(required = false) String keyword,
             @Parameter(
                     description = "페이지 정보 (예시 데이터를 참고하세요)",
-                    example = "{\"page\": 0, \"size\": 10, \"sort\": \"createdAt,desc\"}"
+                    example = "{\"page\": 0, \"size\": 9, \"sort\": \"createdAt,desc\"}"
             )
-            @PageableDefault(size = 10, sort = "createdAt",direction = Sort.Direction.DESC)
+            @PageableDefault(size = 9, sort = "createdAt",direction = Sort.Direction.DESC)
             Pageable pageable) {
         // 클라이언트가 page,size 안보내면 기본값 설정
         // 1. 서비스에서 전체 글 목록을 가져옴
