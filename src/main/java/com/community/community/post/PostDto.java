@@ -13,7 +13,8 @@ public class PostDto {
 
     public record PostCreateRequest(
             String title,
-            String content
+            String content,
+            String category
 //            Long userId // 글쓴이 식별용 -> JWT 필터로 user 확인
     ) {
     }
@@ -26,6 +27,7 @@ public class PostDto {
             Long viewCount,
             Long likeCount,
             boolean isLiked,
+            String category,
             // 1. 단일 -> List imageUrls로 변경
             List<String> imageUrls,
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
@@ -50,6 +52,7 @@ public class PostDto {
                     post.getViewCount(),
                     post.getLikeCount(),
                     isLiked,
+                    post.getCategory(),
                     urls, // 3. 뽑아낸 리스트 삽입
                     post.getCreatedAt(),
                     post.getUpdatedAt(),
@@ -68,6 +71,7 @@ public class PostDto {
             String writer,
             Long viewCount,
             Long likeCount,
+            String category,
             String thumbnailUrl,
             Long commentCount,
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
@@ -86,6 +90,7 @@ public class PostDto {
                     post.getUserEntity().getUsername(),
                     post.getViewCount(),
                     post.getLikeCount(),
+                    post.getCategory(),
                     thumb,
                     post.getCommentCount(),
                     post.getCreatedAt(),
@@ -94,6 +99,6 @@ public class PostDto {
         }
     }
 
-    public record PostUpdateRequest(String title, String content) {
+    public record PostUpdateRequest(String title, String content,String category) {
     }
 }

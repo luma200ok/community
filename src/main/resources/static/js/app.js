@@ -1,7 +1,7 @@
 const API_BASE = "/api";
 let currentPostId = null
 let accumulatedFiles = [];
-
+let currentPostCategory = "자유";
 // ==========================================
 // 💡 0. 토큰 안전하게 가져오기 (JS 에러 방어용!)
 // ==========================================
@@ -108,7 +108,7 @@ function renderHeader() {
 // 💡 2. 화면 섹션 전환 로직 (토글)
 // ==========================================
 function hideAllForms() {
-    ['login-section', 'signup-section', 'write-section', 'find-password-section','mypage-section'].forEach(id => {
+    ['login-section', 'signup-section', 'write-section', 'find-password-section','mypage-section','edit-section'].forEach(id => {
         document.getElementById(id).style.display = 'none';
     });
 }
@@ -132,10 +132,14 @@ function toggleForm(type) {
             return alert("로그인이 필요합니다!");
         }
         // 💡 새 글 쓸 때 이전 텍스트와 사진 흔적 날리기!
+        document.getElementById("category").value = "자유";
+
         document.getElementById("title").value = "";
         document.getElementById("content").value = "";
         document.getElementById("imageFile").value = "";
+
         accumulatedFiles = []; // 장바구니 비우기
+
         document.getElementById("write-file-count").innerHTML = ""; // 갯수 텍스트 지우기
         document.getElementById("write-image-preview").innerHTML = ""; // 도화지 지우기
 
@@ -214,6 +218,7 @@ async function logout() {
 // 💡 4. 게시글 로직 (카드 형태로 그리기 적용!)
 // ==========================================
 async function writePost() {
+    const category = document.getElementById("category").value;
     const title = document.getElementById("title").value;
     const content = document.getElementById("content").value;
     const imageInput = document.getElementById("imageFile");
@@ -222,12 +227,11 @@ async function writePost() {
     if(!headers.Authorization) return alert("로그인이 필요합니다!");
 
     const formData = new FormData();
-    formData.append("request", new Blob([JSON.stringify({ title, content })], { type: "application/json" }));
+    formData.append("request", new Blob([JSON.stringify({ title, content, category })], { type: "application/json" }));
 
-    // 💡 [수정됨] 여러 파일을 반복문을 통해 전부 append 합니다. (키 이름은 "images"로 동일하게 유지!)
     accumulatedFiles.forEach(file => formData.append("images", file));
+
     try {
-        // 💡 fetch 대신 fetchWithAuth 사용! (헤더도 함수가 알아서 넣어주므로 뺄 수 있습니다)
         const response = await fetchWithAuth(`${API_BASE}/posts`, {
             method: "POST",
             body: formData
@@ -238,7 +242,10 @@ async function writePost() {
             document.getElementById("content").value = "";
             imageInput.value = "";
             showList();
-        } else { alert("작성 실패"); }
+        } else {
+            const err = await response.json();
+            alert("작성 실패: " + (err.message || "권한이 없습니다."));
+        }
     } catch (error) { console.error(error); }
 }
 
@@ -268,16 +275,25 @@ async function fetchPosts(page = 0) {
                 ? post.thumbnailUrl
                 : "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=300&q=80";
 
+            // 💡 1. 카테고리가 '공지'면 빨간색, '질문'이면 초록색, 나머지는 파란색 뱃지 달기!
+            let badgeStyle = "background-color: #007bff; color: white;"; // 기본 파란색 (자유)
+            if (post.category === "공지") {
+                badgeStyle = "background-color: #dc3545; color: white; font-weight: bold;"; // 공지는 눈에 띄게 빨간색
+            } else if (post.category === "질문") {
+                badgeStyle = "background-color: #28a745; color: white;"; // 질문은 초록색
+            }
+
             const postHtml = `
                 <div class="card" onclick="viewPost(${post.id})">
                     <img src="${thumbImg}" class="card-image" alt="썸네일">
                     <div class="card-content">
-                        <span class="card-badge">자유</span>
+                        <span class="card-badge" style="${badgeStyle}">${post.category}</span>
                         <h3 class="card-title">${post.title}</h3>
                         <p class="card-summary">내용을 보려면 클릭하세요...</p>
                         <div class="card-footer">
                             <span>👤 ${post.writer}</span>
-                            <span>👀 ${post.viewCount} | ❤️ ${post.likeCount} | 💬 ${post.commentCount}</span>                        </div>
+                            <span>👀 ${post.viewCount} | ❤️ ${post.likeCount} | 💬 ${post.commentCount}</span>                        
+                        </div>
                     </div>
                 </div>
             `;
@@ -299,6 +315,8 @@ async function viewPost(postId) {
         const response = await fetch(`${API_BASE}/posts/${postId}`, { headers });
         if (!response.ok) return alert("게시글을 불러올 수 없습니다.");
         const post = await response.json();
+
+        currentPostCategory = post.category;
 
         hideAllForms();
         document.getElementById("list-section").style.display = "none";
@@ -465,7 +483,7 @@ function showEditForm() {
 
     document.getElementById("edit-title").value = document.getElementById("detail-title").innerText;
     document.getElementById("edit-content").value = document.getElementById("detail-content").innerText;
-
+    document.getElementById("edit-category").value = currentPostCategory;
     // 💡 수정 창 열 때마다 첨부파일 입력칸과 도화지 깨끗하게 비우기!
     document.getElementById("edit-imageFile").value = ""
     accumulatedFiles = []; // 장바구니 비우기
@@ -479,18 +497,19 @@ function cancelEdit() {
 }
 
 async function updatePost() {
+    const category = document.getElementById("edit-category").value;
     const title = document.getElementById("edit-title").value;
     const content = document.getElementById("edit-content").value;
     const headers = getAuthHeaders();
+
     if (!headers.Authorization) return alert("로그인이 필요합니다!");
 
     const formData = new FormData();
-    formData.append("request", new Blob([JSON.stringify({ title, content })], { type: "application/json" }));
+    formData.append("request", new Blob([JSON.stringify({ title, content, category })], { type: "application/json" }));
 
     accumulatedFiles.forEach(file => formData.append("images", file));
 
     try {
-        // 💡 1. 일반 fetch 대신 'fetchWithAuth' 로 변경 (헤더 자동처리)
         const response = await fetchWithAuth(`${API_BASE}/posts/${currentPostId}`, {
             method: "PUT",
             body: formData
@@ -501,13 +520,10 @@ async function updatePost() {
             document.getElementById("edit-section").style.display = "none";
             viewPost(currentPostId);
         } else {
-            // 💡 2. 무조건 "권한이 없습니다"가 아니라, 백엔드가 보낸 진짜 이유를 띄우도록 수정
             const errorData = await response.json().catch(() => ({}));
             alert("수정 실패: " + (errorData.message || "권한이 없습니다!"));
         }
-    } catch (error) {
-        console.error(error);
-    }
+    } catch (error) { console.error(error); }
 }
 
 // 💡 화면 켜지자마자 실행되는 곳

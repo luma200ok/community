@@ -48,10 +48,16 @@ public class PostService {
         UserEntity findUser = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
+        // 🚨 일반 유저가 몰래 '공지' 카테고리로 글을 쓰려 하면 에러 발생!
+        if ("공지".equals(request.category()) && !findUser.isAdmin()) {
+            throw new CustomException(EDIT_ACCESS_DENIED); // 권한 없음 에러
+        }
+
         // 2. 게시글(Post) 먼저 생성 및 DB에 저장 (사진은 아직 업로드X)
         PostEntity post = PostEntity.builder()
                 .title(request.title())
                 .content(request.content())
+                .category(request.category()) // 카테고리 저장
                 .userEntity(findUser) // 유저 객체 맵핑
                 .build();
         postRepository.save(post);
@@ -149,9 +155,13 @@ public class PostService {
                 }
             }
         }
+        // 💡 [수정] 4. 텍스트 내용 및 카테고리 수정
+        // 🚨 누군가 글을 수정하면서 몰래 '공지' 카테고리로 바꾸려 한다면 관리자인지 검증!
+        if ("공지".equals(request.category()) && !post.getUserEntity().isAdmin()) {
+            throw new CustomException(EDIT_ACCESS_DENIED); // 권한 없음 에러
+        }
 
-        // 4. 텍스트 내용 수정
-        post.update(request.title(), request.content());
+        post.update(request.title(), request.content(), request.category());
     }
 
     /**
@@ -182,18 +192,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public Page<PostListResponse> getAllPost(Pageable pageable, String keyword) {
 
-        Page<PostEntity> posts;
-
-        // 1. 검색어가 비어있거나 띄어쓰기만 있으면 기존처럼 전체 조회
-        if (keyword == null || keyword.trim().isEmpty()) {
-            posts = postRepository.findAll(pageable);
-        }
-
-        // 2. 검색어가 있으면 제목과 내용에 같은 키워드 넣어 검색
-        else {
-            posts = postRepository.findByTitleContainingOrContentContaining(
-                    keyword, keyword, pageable);
-        }
+        Page<PostEntity> posts = postRepository.findPostsWithNoticeOnTop(keyword, pageable);
         return posts.map(PostListResponse::from);
     }
 }

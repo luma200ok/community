@@ -99,6 +99,11 @@
 
         <div class="section form-card" id="write-section" style="display: none;">
             <h3>✏️ 새 게시글 작성</h3>
+            <select id="category" class="input-box" style="margin-bottom: 10px; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                <option value="자유" selected>💬 자유</option>
+                <option value="질문">❓ 질문</option>
+                <option value="공지">🚨 공지 (관리자 전용)</option>
+            </select>
             <input type="text" id="title" class="input-box" placeholder="게시글 제목">
             <textarea id="content" class="input-box" rows="4" placeholder="게시글 내용"></textarea>
             <input type="file" id="imageFile" accept="image/*, application/pdf" multiple style="display: none;" onchange="handleFileSelect(this, 'write-image-preview', 'write-file-count')">
@@ -161,6 +166,11 @@
 
     <div class="section form-card" id="edit-section" style="display: none;">
         <h3>🛠️ 게시글 수정</h3>
+        <select id="edit-category" class="input-box" style="margin-bottom: 10px; width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+            <option value="자유">💬 자유</option>
+            <option value="질문">❓ 질문</option>
+            <option value="공지">🚨 공지 (관리자 전용)</option>
+        </select>
         <input type="text" id="edit-title" class="input-box" placeholder="게시글 제목">
         <textarea id="edit-content" class="input-box" rows="4" placeholder="게시글 내용"></textarea>
         <input type="file" id="edit-imageFile" accept="image/*application/pdf" multiple style="display: none;" onchange="handleFileSelect(this, 'edit-image-preview', 'edit-file-count')">

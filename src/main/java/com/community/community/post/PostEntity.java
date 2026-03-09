@@ -51,6 +51,9 @@ public class PostEntity extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean isDeleted = false;
 
+    @Column(length = 20, nullable = false)
+    private String category = "자유";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity userEntity;
@@ -59,15 +62,17 @@ public class PostEntity extends BaseTimeEntity {
     private List<PostImageEntity> images = new ArrayList<>();
 
     @Builder
-    public PostEntity(String title, String content, UserEntity userEntity, String imageUrl) {
+    public PostEntity(String title, String content, UserEntity userEntity, String category) {
         this.title = title;
         this.content = content;
         this.userEntity = userEntity;
+        this.category = category != null ? category : "자유";
     }
 
-    public void update(String title, String content) {
+    public void update(String title, String content, String category) {
         this.title = title;
         this.content = content;
+        if (category != null) this.category = category;
     }
 
     public void increaseViewCount() {
