@@ -61,6 +61,7 @@ jobs:
             # 3. 백그라운드(nohup)로 새 서버 실행 및 로그 남기기
             nohup java -jar \
             -Dspring.profiles.active=prod \
+            -DS3_FOLDER=prod \
             -DAWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }} \
             -DAWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }} \
             -DDB_USERNAME=${{ secrets.DB_USERNAME }} \

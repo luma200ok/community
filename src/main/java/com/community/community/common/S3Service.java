@@ -19,8 +19,11 @@ import static com.community.community.exception.ErrorCode.*;
 @RequiredArgsConstructor
 public class S3Service {
 
-    // 💡 방금 설치한 라이브러리가 제공하는 S3 조종기입니다!
+    // 라이브러리가 제공하는 S3 조종기
     private final S3Template s3Template;
+    // 폴더 경로를 읽어올 변수 추가
+    @Value("${spring.cloud.aws.s3.folder}")
+    private String s3Folder;
 
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucketName;
@@ -43,7 +46,7 @@ public class S3Service {
 
         // 1. 파일 이름 중복을 막기 위해 겹치지 않는 랜덤 이름(UUID) 생성
         String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        String randomFileName = UUID.randomUUID().toString() + extension;
+        String randomFileName = s3Folder + "/" + UUID.randomUUID().toString() + extension;
 
         try {
             // 2. S3 조종기를 통해 버킷에 파일 업로드!
