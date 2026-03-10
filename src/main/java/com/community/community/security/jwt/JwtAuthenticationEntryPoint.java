@@ -1,4 +1,4 @@
-package com.community.community.config;
+package com.community.community.security.jwt;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

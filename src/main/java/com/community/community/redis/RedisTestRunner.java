@@ -1,4 +1,4 @@
-package com.community.community.config;
+package com.community.community.redis;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;

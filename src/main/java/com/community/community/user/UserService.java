@@ -1,7 +1,7 @@
 package com.community.community.user;
 
-import com.community.community.config.JwtUtil;
-import com.community.community.config.RedisService;
+import com.community.community.security.jwt.JwtUtil;
+import com.community.community.redis.RedisService;
 import com.community.community.exception.CustomException;
 import com.community.community.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;

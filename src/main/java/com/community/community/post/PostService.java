@@ -3,7 +3,7 @@ package com.community.community.post;
 import com.community.community.comment.CommentEntity;
 import com.community.community.comment.CommentRepository;
 import com.community.community.common.S3Service;
-import com.community.community.config.RedisService;
+import com.community.community.redis.RedisService;
 import com.community.community.exception.CustomException;
 import com.community.community.like.LikeRepository;
 import com.community.community.user.UserEntity;

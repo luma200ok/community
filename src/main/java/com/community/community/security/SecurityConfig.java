@@ -1,5 +1,8 @@
-package com.community.community.config;
+package com.community.community.security;
 
+import com.community.community.security.jwt.JwtAccessDeniedHandler;
+import com.community.community.security.jwt.JwtAuthenticationEntryPoint;
+import com.community.community.security.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
