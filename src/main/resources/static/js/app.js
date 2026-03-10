@@ -179,6 +179,9 @@ async function signup() {
 }
 
 async function login() {
+    const btn = document.querySelector("#login-section button"); // 로그인 버튼 찾기
+    btn.disabled = true; // 더블클릭 방지 버튼 잠그기
+
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
     try {
@@ -200,7 +203,10 @@ async function login() {
             const errorData = await response.json();
             alert("로그인 실패: " + errorData.message);
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { console.error(error);
+    } finally {
+        btn.disabled = false // 성공하든 실패하든 마지막에 다시 버튼 열어주기
+    }
 }
 
 async function logout() {
