@@ -369,6 +369,12 @@ async function viewPost(postId) {
         // 💡 1. 댓글과 대댓글을 그려주는 마법의 재귀 함수
         function generateCommentHtml(comment, isReply = false) {
             const isDeleted = comment.writer === "(알 수 없음)";
+            const hasActiveReplies = comment.replies && comment.replies.some(reply => reply.writer !== "(알 수 없음)");
+
+            // 내가 삭제되었고 && 살아있는 대댓글도 없다면? -> 뼈대조차 안 그리고 화면에서 아예 지워버림!
+            if (isDeleted && !hasActiveReplies) {
+                return "";
+            }
 
             // ⭐ [디테일 추가] 내용 맨 앞에 '@유저이름'이 있으면 파란색으로 예쁘게 강조해 주는 정규식!
             const formattedContent = comment.content.replace(/^(@\S+)/, '<span style="color: #007bff; font-weight: bold;">$1</span>');
@@ -839,6 +845,7 @@ function handleFileSelect(input, previewBoxId, countBoxId) {
     // 3. 화면 다시 그리기
     updatePreviewUI(previewBoxId, countBoxId);
 }
+
 function updatePreviewUI(previewBoxId, countBoxId) {
     const previewBox = document.getElementById(previewBoxId);
     const countBox = document.getElementById(countBoxId);
