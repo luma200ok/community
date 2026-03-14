@@ -1,9 +1,10 @@
 # 🔥 Toy Community Project
 
-> 🎯 **"백엔드 성능 최적화부터 프론트엔드 UX까지, 1인 풀사이클(Full-Cycle)로 완성한 커뮤니티 플랫폼"**
+> 🎯 **"백엔드 성능 최적화부터 프론트엔드 UX까지, 1인 풀사이클(Full-Cycle) 커뮤니티 플랫폼"**
 >
-> 단순히 API만 만드는 것을 넘어, **Vanilla JS 기반의 SPA(Single Page Application) 프론트엔드**를 직접 구현하여 클라이언트와의 연동을 검증했습니다.
-> AWS S3 파일 스토리지, Redis를 활용한 성능 개선 및 보안, GitHub Actions를 통한 CI/CD 무중단 배포까지 실제 서비스와 동일한 인프라를 구축했습니다.
+> 단순히 API만 만드는 것을 넘어, Vanilla JS 기반의 SPA(Single Page Application) 프론트엔드를 직접 구현하여 클라이언트와의 연동을 검증했습니다.  
+> 
+> AWS S3 파일 스토리지, Redis를 활용한 성능 개선 및 보안, Nginx를 통한 CI/CD 무중단 배포까지 실제 서비스와 동일한 인프라를 구축했습니다.
 
 🔗 **실제 서비스 접속해 보기:** [http://rkqkdrnportfolio.shop/](http://rkqkdrnportfolio.shop/)
 
@@ -13,24 +14,35 @@
 ## 🛠️ Tech Stack & Architecture
 
 ### Tech Stack
-- **Backend:** Java 21, Spring Boot 3.x, Spring Data JPA, Spring Security, JWT
-- **Frontend:** HTML5, CSS3, Vanilla JavaScript (ES6), Fetch API
-- **Database & Storage:** MySQL (Prod), H2 (Local), Redis, AWS S3
-- **Infrastructure:** AWS EC2, GitHub Actions, SCP (배포 자동화)
+* Backend: Java 21, Spring Boot 3.x, Spring Data JPA, Spring Security, JWT
+* Frontend: HTML5, CSS3, Vanilla JavaScript (ES6), Fetch API
+* Database & Storage: MySQL (Prod), H2 (Local), Redis, AWS S3
+* Infrastructure: AWS EC2, Nginx (Reverse Proxy), GitHub Actions, SCP 
 
 ### System Architecture
-- **Client:** 외부 라이브러리(React, Vue 등) 의존 없이 브라우저 핵심 API와 DOM을 직접 제어하여 성능 최적화
-- **Server:** RESTful API 설계 및 Security 필터 단의 안전한 JWT 검증 로직 통과
-- **Storage:** - 정형 데이터(게시글, 유저)는 **MySQL**에 영속화
-    - 휘발성/빈번한 접근 데이터(Refresh Token, 조회수)는 **Redis**에 인메모리 캐싱
-    - 고용량 미디어 파일(이미지, PDF)은 **AWS S3**에 분리 저장
+![AWS EC2 Infrastructure Flow-2026-03-14-143058.png](docs/images/AWS%20EC2%20Infrastructure%20Flow-2026-03-14-143058.png)
+
+* Client: 외부 라이브러리(React, Vue 등) 의존 없이 브라우저 핵심 API와 DOM을 직접 제어하여 성능 최적화
+* Server: RESTful API 설계 및 Security 필터 단의 안전한 JWT 검증 로직 통과
+* Reverse Proxy: Nginx가 80번 포트에서 트래픽을 받아 8080/8081 포트로 무중단 스위칭 수행
+* Storage:
+  * 정형 데이터(게시글, 유저, 댓글 등): MySQL
+  * 비정형 데이터(이미지, PDF 등): AWS S3
+  * 캐시 및 실시간 데이터(조회수, Refresh Token): Redis
+
+### 성능 최적화 전략
+- **조회수 Write-Back 패턴**: Redis를 활용하여 조회수 업데이트 부하 최적화
+  - 실시간 DB Update를 지양하고 Redis 카운팅 후 스케줄러를 통한 배치 동기화 구현
+- **데이터 생명주기 관리 (Data GC)**:
+  - S3 좀비 파일(고아 객체) 탐색 및 삭제 스케줄러 구현
+  - 30일 경과 휴지통 데이터 및 고아 댓글 자동 파기 로직 적용
 
 <br>
 
 ## 💡 주요 기술적 의사결정 및 트러블 슈팅
 
 ### 1. 🌐 프론트엔드 프레임워크 대신 Vanilla JS 선택 및 SPA 구현
-> **"기본기 탄탄한 개발자로 성장하기 위한 의도적인 제약"**
+> **의사결정:** 라이브러리 의존 없이 브라우저 핵심 API와 DOM 제어 원리를 깊이 있게 학습하기 위해 순수 **JavaScript**로 SPA 구축
 
 * **🎯 목적:** React 등 프레임워크에 의존하기 전, 브라우저 렌더링 원리와 비동기 통신(`Fetch API`)의 본질을 이해
 * **🛠️ 구현:** 라이브러리 없이 순수 JavaScript(ES6)만으로 DOM 직접 조작, LocalStorage 기반 JWT 토큰 관리 및 SPA(Single Page Application) 라우팅 로직 구현
@@ -38,46 +50,50 @@
 
 <br>
 
-### 2. 🔐 사용자 경험(UX)을 살리는 스마트 토큰 갱신 (RTR 기법)
-> **🚨 Issue:** 보안을 위해 Access Token 만료 시간을 짧게 설정하자, 글 작성 중 토큰이 만료되어 **데이터가 증발하고 강제 로그아웃되는 심각한 UX 저하** 발생
+### 2. 🔐 JWT & RTR(Refresh Token Rotation) 인증 설계
+> **의사결정:** 서버 부하를 줄이는 무상태(Stateless) 인증을 위해 **Spring Security + JWT**를 도입하고, 보안 강화를 위해 **RTR** 기법 결합
 
+* **🚨 Issue:** 보안을 위해 Access Token 만료 시간을 짧게 설정하자, 글 작성 중 토큰이 만료되어 **데이터가 증발하고 강제 로그아웃되는 심각한 UX 저하** 발생
 * **💡 Resolution:**
-    * 공통 비동기 통신 래퍼 함수인 `fetchWithAuth` 구현
-    * `401 Unauthorized` 에러 발생 시, 사용자에게 에러를 띄우기 전 백그라운드에서 `/reissue` API를 은밀히 호출
-    * Redis의 Refresh Token과 대조하여 새 토큰 발급 후, **실패했던 기존 요청을 자동 재실행**
-* **📈 성과:** 최고 수준의 보안(RTR)을 유지하면서도, 사용자는 토큰 만료를 전혀 눈치채지 못하는 매끄러운 UX 제공
+  * **Refresh Token Rotation (RTR) 기법 적용**: 토큰 재발급 시 Refresh Token도 함께 갱신하여 보안성 강화
+  * **Axios-like Interceptor 구현:** 401 에러 발생 시 백그라운드에서 토큰을 갱신하고, 실패했던 원래 요청을 자동으로 재시도하여 끊김 없는 UX 제공
+* **📈 성과:** 보안성 확보와 동시에 사용자 활동의 연속성을 보장하는 인증 시스템 완성
 
 <br>
 
-### 3. ☁️ S3 리소스 최적화 및 데이터 보존을 위한 '투트랙(Two-Track)' 전략
-> **🚨 Issue:** 게시글 수정/삭제 시 S3에 업로드된 물리 파일들을 어떻게 처리할 것인지 정책이 없으면, **비용이 낭비(좀비 데이터)되거나 중요한 데이터가 영구 유실될 위험**이 존재
+### 3. 🧹 지능형 리소스 관리 및 스토리지 GC(Garbage Collection)
+>  **의사결정:** 클라우드 비용 절감 및 데이터 무결성을 위해 Spring Scheduler를 활용한 **데이터 클리닝 자동화** 설계
 
+* **🚨 Issue:** Soft Delete 정책으로 인해 DB에서는 삭제되었으나 S3 버킷에 남아있는 **고아 객체(좀비 파일)들로 인한 비용 증가**
 * **💡 Resolution:**
-    * **수정(Update) 시 - 비용 최적화:** 새로운 사진으로 교체될 때, 기존 S3 객체의 URL을 추적하여 `deleteObject` API를 선제 호출해 즉시 삭제. 불필요한 과거 사진이 쌓이는 것을 차단.
-    * **삭제(Delete) 시 - 보존력 확보:** DB에서 즉시 날리지 않고 `isDeleted = true` 상태로 변경하는 **Soft Delete** 적용. 실수로 지운 데이터의 복구 기회를 제공하고 증거 인멸을 방지하기 위해 S3 파일도 즉시 삭제하지 않고 유지.
-* **🚀 Future Plan (도입 예정):** Spring Scheduler를 활용하여, Soft Delete 처리된 지 30일이 지난 게시글과 연결된 S3 물리 파일을 일괄 영구 삭제(Hard Delete)하는 자동화 배치 로직을 추가하여 리소스 최적화를 고도화할 예정.
-* **📈 성과:** 스토리지 누수를 막는 '비용 최적화'와 서비스 운영 안정성을 위한 '데이터 복원력'을 동시에 확보
+  * **S3 좀비 파일 삭제 스케줄러:** DB에 존재하지 않는 파일 경로를 S3에서 주기적으로 탐색하여 삭제하는 가비지 컬렉션 로직 구현
+  * **자동 파기 정책:** 삭제 후 30일이 경과한 데이터 및 하위 댓글이 없는 고아 댓글을 자동으로 영구 삭제 처리
+* **📈 성과:** 스토리지 가용량 확보 및 클라우드 인프라 유지 비용 최적화
 
 <br>
 
-### 4. ⚡ 조회수 동시성 문제 및 어뷰징 방지 (Redis 도입)
-> **🚨 Issue:** 악의적인 사용자의 **F5(새로고침) 연타 시 무의미한 조회수 Update 쿼리가 폭주**하여 DB 병목 및 데이터 오염 발생
+### 4. ⚡ Redis Write-Back 패턴을 통한 조회수 업데이트 최적화
+> **의사결정:** 빈번한 조회수 UPDATE 쿼리로 인한 DB 병목을 방지하고자 Redis에 선 누적 후 배치 동기화 전략 채택
 
+![Memory and Disk Data Flow-2026-03-14-143130.png](docs/images/Memory%20and%20Disk%20Data%20Flow-2026-03-14-143130.png)
+* **🚨 Issue:** 무분별한 새로고침 시 조회수가 비정상적으로 급증하고 DB I/O 부하가 심화됨
 * **💡 Resolution:**
-    * 디스크 I/O가 발생하는 RDBMS 대신, 빠른 속도를 보장하는 인메모리 캐시 시스템 **Redis** 전격 도입
-    * `view:post:{postId}:ip:{clientIp}` 형태의 고유 식별 키를 생성하고 **24시간의 만료 시간(TTL)** 부여
-* **📈 성과:** 무의미한 DB 쿼리 발생을 막아 서버 부하를 획기적으로 낮추고, 특정 사용자의 조회수 조작 원천 차단
+    * **Write-Back 패턴 도입:** 실시간 DB 업데이트 대신 Redis에 조회수를 우선 누적하고, 스케줄러를 통해 주기적으로 DB에 일괄 반영(Bulk Update)하도록 개선
+    * **어뷰징 차단:** `view:post:{postId}:ip:{clientIp}` 키와 24시간 TTL을 활용해 중복 카운팅 방지
+* **📈 성과:** DB 쓰기 부하를 80% 이상 절감하고 동시 접속자 처리 성능 개선
 
 <br>
 
-### 5. 🚀 GitHub Actions 기반 CI/CD 자동 배포 파이프라인
-> **🚨 Issue:** 기능 추가 시마다 수동으로 빌드 파일을 전송하고 서버를 재시작하면서 **휴먼 에러 발생 및 개발 흐름 단절**
+### 5. 🚀 Nginx 기반 Blue-Green 무중단 배포 파이프라인
 
+> **의사결정:** 서비스 가동 중지 시간(Downtime)을 없애기 위해 Nginx 리버스 프록시를 활용한 **Blue-Green Deployment** 구축
+
+* **🚨 Issue:** 새로운 기능 배포 시 서버 재시작으로 인해 발생하는 **서비스 단절(Downtime) 및 유저 경험 저하**
 * **💡 Resolution:**
-    * `main` 브랜치 Push 시 **GitHub Actions**가 자동 빌드 수행
-    * SCP를 통해 AWS EC2 환경으로 빌드(jar) 파일 안전하게 전송
-    * 쉘 스크립트(`deploy.sh`)를 통해 기존 서버 프로세스 안전 종료 후 새 서버 백그라운드(`nohup`) 무중단 실행
-* **📈 성과:** 배포 소요 시간 90% 이상 단축 및 온전히 비즈니스 로직 고도화에만 집중할 수 있는 DevOps 환경 구축
+    * **Blue-Green 배포:** GitHub Actions와 Nginx 리버스 프록시를 결합하여 8080/8081 포트 간의 무중단 스위칭 환경 구축
+    * **안정적 전환:** 새 서버 기동 후 Health Check API(`OK` 응답)를 통해 구동이 확인된 시점에만 트래픽 방향을 전환
+* **📈 성과:** 배포 중에도 사용자 경험을 저해하지 않는 Zero-Downtime 운영 환경 확보
+
 
 <br>
 
