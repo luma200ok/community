@@ -5,8 +5,9 @@
 > 단순히 API만 만드는 것을 넘어, **Vanilla JS 기반의 SPA(Single Page Application) 프론트엔드**를 직접 구현하여 클라이언트와의 연동을 검증했습니다.
 > AWS S3 파일 스토리지, Redis를 활용한 성능 개선 및 보안, GitHub Actions를 통한 CI/CD 무중단 배포까지 실제 서비스와 동일한 인프라를 구축했습니다.
 
-🔗 **실제 서비스 접속해 보기:** [http://rkqkdrnportfolio.shop:8080/](http://rkqkdrnportfolio.shop:8080/)
+🔗 **실제 서비스 접속해 보기:** [http://rkqkdrnportfolio.shop/](http://rkqkdrnportfolio.shop/)
 
+🔗 **Swagger API**: [http://rkqkdrnportfolio.shop/swagger-ui/index.html](http://rkqkdrnportfolio.shop/swagger-ui/index.html)
 <br>
 
 ## 🛠️ Tech Stack & Architecture
@@ -119,4 +120,4 @@
 
 ---
 
-최근 업데이트 2026.03.10 -README V1.0.0 최종 작성
+최근 업데이트 2026.03.14 -README V1.0.0 최종 작성
