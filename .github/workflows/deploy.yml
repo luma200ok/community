@@ -12,10 +12,10 @@ jobs:
       - name: 1. 저장소 코드 가져오기
         uses: actions/checkout@v3
 
-      - name: 2. JDK 17 세팅
+      - name: 2. JDK 21 세팅
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'corretto'
 
       - name: 3. Gradle 실행 권한 부여

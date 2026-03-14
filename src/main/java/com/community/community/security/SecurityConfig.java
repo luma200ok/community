@@ -62,12 +62,17 @@ public class SecurityConfig {
                         // 💡 2. 통과 명단에 "/h2-console/**" 을 추가
                         .requestMatchers("/h2-console/**").permitAll()
 
+                        // users api 통과 허용
                         .requestMatchers(
                                 "/api/users/signup",
                                 "/api/users/login",
                                 "/api/users/password/find",
                                 "/api/users/reissue").permitAll()
+                        // post api 통과 허용
                         .requestMatchers(GET, "/api/posts","/api/posts/**").permitAll()
+
+                        // health check api 통과 허용
+                        .requestMatchers(GET, "/api/health").permitAll()
 
                         // 스프링 부트가 내부적으로 호출하는 에러 URL 통과 허용
                         .requestMatchers("/error").permitAll()
