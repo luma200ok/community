@@ -43,22 +43,24 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ec2-user/community
+            # 1. 실행할 최신 JAR 파일 찾기
+            JAR_PATH=$(ls -tr build/libs/*SNAPSHOT.jar | tail -n 1)
             
-            # 1. 포트 8082를 쓰고 있는 기존 커뮤니티 프로세스 찾아서 죽이기 (8080, 8081 보호!)
-            CURRENT_PID=$(lsof -ti:8082)
-            if [ -z "$CURRENT_PID" ]; then
-                echo "현재 8082 포트에서 실행 중인 커뮤니티 서버가 없습니다."
+            # 2. 현재 Nginx가 바라보고 있는 포트 확인
+            CURRENT_PORT=$(grep -o '808[0-1]' /etc/nginx/conf.d/service-url.inc)
+            if [ ${CURRENT_PORT} -eq 8080 ]; then
+              TARGET_PORT=8081
             else
-                echo "실행 중인 커뮤니티 서버 종료 (PID: $CURRENT_PID)"
-                kill -15 $CURRENT_PID
-                sleep 5
+              TARGET_PORT=8080
             fi
             
-            # 2. 전송된 jar 파일 이름 찾기
-            JAR_NAME=$(ls -tr *.jar | tail -n 1)
-            echo "실행할 JAR 파일명: $JAR_NAME"
+            echo "======================================"
+            echo "> 현재 활성화된 포트: ${CURRENT_PORT}"
+            echo "> 새로 배포할 타겟 포트: ${TARGET_PORT}"
+            echo "======================================"
             
-            # 3. 백그라운드(nohup)로 새 서버 실행 및 로그 남기기
+            # 3. 타겟 포트에 새 서버 실행 (기존 포트는 냅두고!)
+            # 🚨 기존에 있던 AWS, DB 비밀번호, prod 옵션을 반드시 넣어야 합니다!
             nohup java -jar \
             -Dspring.profiles.active=prod \
             -DS3_FOLDER=prod \
@@ -69,6 +71,37 @@ jobs:
             -DADMIN_SECRET_KEY=${{ secrets.ADMIN_SECRET_KEY }} \
             -DMAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
             -DMAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} \
-            $JAR_NAME > app.log 2>&1 &
-          
-            echo "🚀 커뮤니티 서버(8082, Prod모드, MySQL 연동) 자동 배포 완료!"
+            -Dserver.port=${TARGET_PORT} \
+            $JAR_PATH > nohup.out 2>&1 &
+            
+            # 4. 새 서버가 다 켜질 때까지 기다리기 (Health Check)
+            echo "> 새 서버가 켜질 때까지 기다립니다..."
+            for RETRY_COUNT in {1..10}
+            do
+              echo "> Health Check 시도 (${RETRY_COUNT}/10)..."
+              sleep 10
+            
+              # 아까 만든 /api/health API를 찔러서 OK가 나오는지 확인
+              RESPONSE=$(curl -s http://127.0.0.1:${TARGET_PORT}/api/health)
+            
+              if [ "${RESPONSE}" = "OK" ]; then
+                echo "> Health Check 성공! 새 서버가 정상적으로 켜졌습니다."
+            
+                # 5. Nginx 방향 틀기 (Zero-Downtime의 핵심!)
+                echo "set \$service_url http://127.0.0.1:${TARGET_PORT};" | sudo tee /etc/nginx/conf.d/service-url.inc
+                sudo systemctl reload nginx
+                echo "> Nginx 스위칭 완료! (이제 손님들은 ${TARGET_PORT}번으로 들어갑니다)"
+            
+                # 6. 아무도 안 쓰는 구버전 서버 조용히 죽이기
+                echo "> 기존 구버전 서버(${CURRENT_PORT})를 종료합니다."
+                sudo lsof -ti:${CURRENT_PORT} | sudo xargs kill -9
+            
+                echo "> 🚀 완벽한 무중단 배포가 끝났습니다!"
+                exit 0
+              fi
+            done
+            
+            # 10번 다 실패하면? -> 코드에 에러가 있어서 새 서버가 안 켜진 것! (안전하게 롤백)
+            echo "> ❌ 새 서버를 켜는 데 실패했습니다. 배포를 취소하고 롤백합니다."
+            sudo lsof -ti:${TARGET_PORT} | sudo xargs kill -9
+            exit 1
