@@ -110,9 +110,7 @@ public class PostService {
         String viewed = redisService.getValues(redisKey);
 
         if (viewed == null) {
-            // 금고에 없다 최초 조회
-            post.increaseViewCount();
-
+            redisService.increment("viewCount::"+id);
             redisService.setValues(redisKey, "viewed", Duration.ofHours(viewCountTtlHours));
         }
 
@@ -235,5 +233,35 @@ public class PostService {
         if (deletedPostCount > 0) {
             log.info("🧹 [Data GC] 30일 경과 휴지통 게시글 {}개 및 S3 파일 {}장 영구 삭제 완료!", deletedPostCount, imageUrlsToDelete.size());
         }
+    }
+
+    @Transactional
+    public void syncViewCountFromRedis() {
+        // 1. Redis에서 "viewCount::"로 시작하는 모든 키를 가져옴
+        java.util.Set<String> keys = redisService.getKeys("viewCount::*");
+
+        if (keys == null || keys.isEmpty()) return;
+
+        for (String key : keys) {
+            // 2. 키에서 게시글 ID 추출 (viewCount::10 -> 10)
+            Long postId = Long.parseLong(key.split("::")[1]);
+
+            // 3. Redis에 쌓인 조회수 값 가져오기
+            String viewCountStr = redisService.getValues(key);
+            if (viewCountStr != null) {
+                Long viewCount = Long.parseLong(viewCountStr);
+
+                // 4. DB에 한 방에 반영 (JPQL 벌크 연산이나 엔티티 업데이트)
+                postRepository.findById(postId).ifPresent(post -> {
+                    for (int i = 0; i < viewCount; i++) {
+                        post.increaseViewCount();
+                    }
+                });
+
+                // 5. 동기화 완료된 Redis 키 삭제
+                redisService.delete(key);
+            }
+        }
+        log.info("📊 [Redis Sync] {}개의 게시글 조회수를 DB에 동기화 완료했습니다.", keys.size());
     }
 }

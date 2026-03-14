@@ -25,4 +25,19 @@ public class RedisService {
     public void deleteValues(String key) {
         redisTemplate.delete(key);
     }
+
+    // 💡 1. 특정 키의 숫자를 1씩 증가 (조회수 카운팅용)
+    public void increment(String key) {
+        redisTemplate.opsForValue().increment(key);
+    }
+
+    // 💡 2. 특정 패턴(viewCount::*)을 가진 모든 키 찾아오기
+    public java.util.Set<String> getKeys(String pattern) {
+        return redisTemplate.keys(pattern);
+    }
+
+    // 💡 3. DB 동기화가 끝난 키는 삭제
+    public void delete(String key) {
+        redisTemplate.delete(key);
+    }
 }

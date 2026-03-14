@@ -40,6 +40,9 @@ public class DataCleanupScheduler {
         List<String> validImageUrls = postImageRepository.findAllImageUrls(); // 정상 주소록 싹 가져오기
         s3Service.cleanUpZombieFiles(validImageUrls); // 비교해서 S3에서 지우기
 
+        // 조회수 동기화
+        postService.syncViewCountFromRedis();
+
         log.info("✨ [Data GC] 새벽 청소 배치가 완료되었습니다.");
         log.info("=======================================");
     }
