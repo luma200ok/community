@@ -121,7 +121,7 @@ public class PostService {
         }
 
         // 3. 게시글에 달린 댓글 가져오기
-        List<CommentEntity> comments = commentRepository.findByPostEntityId(id);
+        List<CommentEntity> comments = commentRepository.findCommentsByPostIdWithUser(id);
 
         // 4. 찾은 Entity를 DTO로 변환해서 반환
         return PostDetailResponse.from(post, comments, isLiked);

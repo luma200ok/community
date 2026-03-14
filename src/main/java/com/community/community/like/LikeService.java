@@ -1,5 +1,7 @@
 package com.community.community.like;
 
+import com.community.community.exception.CustomException;
+import com.community.community.exception.ErrorCode;
 import com.community.community.post.PostEntity;
 import com.community.community.post.PostRepository;
 import com.community.community.user.UserEntity;
@@ -34,24 +36,22 @@ public class LikeService {
                 () -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
 
         // 2. 이미 이 유저가 이 게시글에 좋아요 눌렀는지 DB 조회
-        Optional<LikeEntity> foundLike = likeRepository.findByUserEntityAndPostEntity(user, post);
+        boolean isLiked = likeRepository.existsLike(userId, postId);
 
-
-        if (foundLike.isPresent()) {
-            // 3-1 이미 좋아요가 있다면? -> 삭제 (좋아요 취소)
-            likeRepository.delete(foundLike.get());
+        if (isLiked) {
+            // 3-1 이미 좋아요가 있다면? -> 삭제
+            // 삭제할 때는 엔티티가 필요하므로 이때만 조회합니다.
+            LikeEntity foundLike = likeRepository.findByUserEntityAndPostEntity(user, post)
+                    .orElseThrow(() -> new CustomException(ErrorCode.COMMENT_NOT_FOUND)); // 에러코드는 적절히 변경
+            likeRepository.delete(foundLike);
             post.decreaseLikeCount();
             return false;
         } else {
-            // 3-2 좋아요가 없다면? -> 생성 (좋아요 등록)
-            LikeEntity build = LikeEntity.builder()
-                    .user(user)
-                    .post(post)
-                    .build();
+            // 3-2 좋아요 등록 로직 동일
+            LikeEntity build = LikeEntity.builder().user(user).post(post).build();
             likeRepository.save(build);
             post.increaseLikeCount();
             return true;
         }
-
     }
 }

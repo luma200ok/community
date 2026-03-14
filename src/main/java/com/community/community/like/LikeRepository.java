@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface LikeRepository extends JpaRepository<LikeEntity, Long> {
+public interface LikeRepository extends JpaRepository<LikeEntity, Long>,LikeRepositoryCustom {
 
     // 유저가 게시글에 좋아요를 눌렀는가? 확인용
     Optional<LikeEntity> findByUserEntityAndPostEntity(UserEntity user, PostEntity post);

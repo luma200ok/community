@@ -185,7 +185,7 @@ public class UserService {
     }
 
     private void validateDuplicateEmail(String email) {
-        userRepository.findByEmail(email).ifPresent(
+        userRepository.findActiveUserByEmail(email).ifPresent(
                 m -> {throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
         });
     }
