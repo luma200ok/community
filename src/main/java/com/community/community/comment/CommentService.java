@@ -7,6 +7,7 @@ import com.community.community.post.PostRepository;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import static com.community.community.exception.ErrorCode.COMMENT_NOT_FOUND;
 import static com.community.community.exception.ErrorCode.POST_NOT_FOUND;
 import static com.community.community.exception.ErrorCode.USER_NOT_FOUND;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -130,5 +132,23 @@ public class CommentService {
         commentRepository.save(reply);
 
         return reply.getId();
+    }
+
+    // ==========================================
+    // [추가] 고아 댓글 영구 삭제 (스케줄러에서 호출할 메서드)
+    // ==========================================
+    public void hardDeleteOrphanComments() {
+        int deletedCount;
+        int totalDeleted = 0;
+
+        // 💡 Bottom-Up 방식: 맨 밑의 자식부터 부모까지 더 이상 지워질 게 없을 때까지 깎아 올라감
+        do {
+            deletedCount = commentRepository.deleteOrphanComments();
+            totalDeleted += deletedCount;
+        } while (deletedCount > 0);
+
+        if (totalDeleted > 0) {
+            log.info("🧹 [Data GC] 뼈대만 남은 고아 댓글 총 {}개 영구 삭제 완료!", totalDeleted);
+        }
     }
 }

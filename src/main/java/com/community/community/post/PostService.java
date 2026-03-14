@@ -9,6 +9,8 @@ import com.community.community.like.LikeRepository;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.community.community.exception.ErrorCode.EDIT_ACCESS_DENIED;
@@ -26,6 +29,7 @@ import static com.community.community.post.PostDto.PostDetailResponse;
 import static com.community.community.post.PostDto.PostListResponse;
 import static com.community.community.post.PostDto.PostUpdateRequest;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -39,6 +43,15 @@ public class PostService {
     private final RedisService redisService;
 
     private final S3Service s3Service;
+
+    // ==========================================
+    // 💡 [추가] yaml 설정 파일에서 정책 값 가져오기
+    // ==========================================
+    @Value("${app.policy.post-retention-days:30}") // (설정이 없으면 기본값 30 적용)
+    private int postRetentionDays;
+
+    @Value("${app.policy.view-count-ttl-hours:24}")
+    private int viewCountTtlHours;
 
     /**
      * 게시글 작성 (다중 이미지 버전)
@@ -100,7 +113,7 @@ public class PostService {
             // 금고에 없다 최초 조회
             post.increaseViewCount();
 
-            redisService.setValues(redisKey,"viewed", Duration.ofHours(24));
+            redisService.setValues(redisKey, "viewed", Duration.ofHours(viewCountTtlHours));
         }
 
         // 이 유저가 좋아요를 눌렀는지 검증
@@ -194,5 +207,33 @@ public class PostService {
 
         Page<PostEntity> posts = postRepository.findPostsWithNoticeOnTop(keyword, pageable);
         return posts.map(PostListResponse::from);
+    }
+
+    // ==========================================
+    // 💡 [추가] 30일 지난 휴지통 게시글 및 S3 좀비 파일 일괄 삭제
+    // ==========================================
+    public void hardDeleteOldPosts() {
+        // ✅ [TO-BE] application.yaml에서 가져온 변수 사용!
+        LocalDateTime threshold = LocalDateTime.now().minusDays(postRetentionDays);
+
+        // 1. 폭파시킬 S3 이미지 URL 목록 미리 가져오기
+        List<String> imageUrlsToDelete = postRepository.findImageUrlsByOldDeletedPosts(threshold);
+
+        // 2. DB에서 이미지 데이터 일괄 삭제
+        postRepository.deleteImagesByOldDeletedPosts(threshold);
+
+        // 3. DB에서 게시글 데이터 일괄 삭제
+        int deletedPostCount = postRepository.deleteOldDeletedPosts(threshold);
+
+        // 4. S3 클라우드에서 실제 물리 파일들 펑! 펑! 삭제
+        if (!imageUrlsToDelete.isEmpty()) {
+            for (String url : imageUrlsToDelete) {
+                s3Service.deleteFile(url);
+            }
+        }
+
+        if (deletedPostCount > 0) {
+            log.info("🧹 [Data GC] 30일 경과 휴지통 게시글 {}개 및 S3 파일 {}장 영구 삭제 완료!", deletedPostCount, imageUrlsToDelete.size());
+        }
     }
 }
