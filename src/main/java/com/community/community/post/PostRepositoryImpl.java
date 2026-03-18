@@ -10,8 +10,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.community.community.post.QPostEntity.postEntity;
+import static com.community.community.post.QPostImageEntity.postImageEntity;
 import static com.community.community.user.QUserEntity.userEntity;
 
 @RequiredArgsConstructor
@@ -21,7 +23,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom{
 
     @Override
     public Page<PostEntity> findPostsWithNoticeOnTop(String keyword, Pageable pageable) {
-// 1. 데이터(Content) 가져오는 쿼리
+        // 1. 데이터(Content) 가져오는 쿼리
         List<PostEntity> content = queryFactory
                 .selectFrom(postEntity)
                 .leftJoin(postEntity.userEntity, userEntity).fetchJoin() // 🔥 User 정보를 한 방에 가져와서 N+1 완벽 방어
@@ -45,6 +47,17 @@ public class PostRepositoryImpl implements PostRepositoryCustom{
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total == null ? 0 : total);
+    }
+    
+    @Override
+    public Optional<PostEntity> findByIdWithUserAndImages(Long id) {
+        PostEntity post = queryFactory
+                .selectFrom(postEntity)
+                .leftJoin(postEntity.userEntity, userEntity).fetchJoin()
+                .leftJoin(postEntity.images, postImageEntity).fetchJoin()
+                .where(postEntity.id.eq(id))
+                .fetchOne();
+        return Optional.ofNullable(post);
     }
 
     // 💡 동적 쿼리를 위한 도우미 메서드
