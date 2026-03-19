@@ -27,6 +27,11 @@ public interface PostRepository  extends JpaRepository<PostEntity, Long>,PostRep
     @Modifying
     @Query(value = "DELETE FROM post_images WHERE post_id IN (SELECT id FROM post WHERE is_deleted = true AND updated_at < :threshold)", nativeQuery = true)
     void deleteImagesByOldDeletedPosts(@Param("threshold") LocalDateTime threshold);
+    
+    // 2-1. DB에서 부모가 지워지기 전에 자식(comment) 데이터 먼저 싹 지우기 (외래키 제약조건 방어)
+    @Modifying
+    @Query(value = "DELETE FROM comment WHERE post_id IN (SELECT id FROM post WHERE is_deleted = true AND updated_at < :threshold)", nativeQuery = true)
+    void deleteCommentsByOldDeletedPosts(@Param("threshold") LocalDateTime threshold);
 
     // 3. DB에서 30일 지난 부모(게시글) 싹 지우기
     @Modifying

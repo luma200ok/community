@@ -47,6 +47,7 @@ public class PostService {
     @Value("${app.policy.post-retention-days:30}")
     private int postRetentionDays;
 
+
     @Value("${app.policy.view-count-ttl-hours:24}")
     private int viewCountTtlHours;
 
@@ -148,9 +149,15 @@ public class PostService {
     }
 
     public void hardDeleteOldPosts() {
-        LocalDateTime threshold = LocalDateTime.now().minusDays(postRetentionDays);
+        LocalDateTime threshold = LocalDateTime.now().minusDays(postRetentionDays); // yaml 설정값 적용
         List<String> imageUrlsToDelete = postRepository.findImageUrlsByOldDeletedPosts(threshold);
+        
+        // 2-1. DB에서 부모(게시글)가 지워지기 전에 자식(댓글) 데이터 먼저 싹 지우기 (외래키 제약조건 방어)
+        postRepository.deleteCommentsByOldDeletedPosts(threshold);
+        // 2-2. DB에서 부모(게시글)가 지워지기 전에 자식(이미지) 데이터 먼저 싹 지우기
         postRepository.deleteImagesByOldDeletedPosts(threshold);
+        
+        // 3. DB에서 게시글 데이터 일괄 삭제
         int deletedPostCount = postRepository.deleteOldDeletedPosts(threshold);
 
         if (!imageUrlsToDelete.isEmpty()) {
