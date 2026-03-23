@@ -74,16 +74,17 @@ jobs:
             fi
             
             # 4. 타겟 포트에 새 서버 실행
+            export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
+            export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
+            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            export ADMIN_SECRET_KEY="${{ secrets.ADMIN_SECRET_KEY }}"
+            export MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}"
+            export MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}"
+            export S3_FOLDER=prod
+
             nohup java -jar \
             -Dspring.profiles.active=prod \
-            -DS3_FOLDER=prod \
-            -DAWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }} \
-            -DAWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }} \
-            -DDB_USERNAME=${{ secrets.DB_USERNAME }} \
-            -DDB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -DADMIN_SECRET_KEY=${{ secrets.ADMIN_SECRET_KEY }} \
-            -DMAIL_USERNAME=${{ secrets.MAIL_USERNAME }} \
-            -DMAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} \
             -Dserver.port=${TARGET_PORT} \
             $JAR_PATH > nohup.out 2>&1 &
             
