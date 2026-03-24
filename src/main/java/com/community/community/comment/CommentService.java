@@ -31,11 +31,11 @@ public class CommentService {
 
         // 1. 댓글을 작성하는 사용자(User)가 존재 하는지 확인
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
         // 2. 댓글이 게시될 게시글(Post)이 존재 하는지 확인
         PostEntity post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 게시글입니다."));
+                .orElseThrow(() -> new CustomException(POST_NOT_FOUND));
 
         // 댓글 작성시 댓글 수 +1
         post.increaseCommentCount();

@@ -158,12 +158,12 @@ public class UserService {
 
         // 💡 방어막 1: 힌트 정답이 일치하는지 확인! (틀리면 에러 뱉고 컷!)
         if (!user.getHintAnswer().equals(request.hintAnswer())) {
-            throw new IllegalArgumentException("힌트 정답이 일치하지 않습니다.");
+            throw new CustomException(ErrorCode.INVALID_HINT_ANSWER);
         }
 
         // 💡 방어막 2: 5분 쿨타임이 지났는지 확인! (안 지났으면 컷!)
         if (!user.canSendEmail()) {
-            throw new IllegalArgumentException("메일 발송은 5분에 한 번만 가능합니다. 잠시 후 다시 시도해주세요.");
+            throw new CustomException(ErrorCode.EMAIL_SEND_COOLDOWN);
         }
 
         // --- 여기서부터는 기존 로직과 동일 ---

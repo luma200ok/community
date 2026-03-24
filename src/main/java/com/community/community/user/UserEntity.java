@@ -2,6 +2,8 @@ package com.community.community.user;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,12 +35,13 @@ public class UserEntity {
     private String email;
 
     //  권한 필드 추가 (기본값 일반 유저)
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String role;
+    private Role role;
 
     // 관리자(Admin) 확인 편의 메서드 추가
     public boolean isAdmin() {
-        return "ADMIN".equals(this.role);
+        return Role.ADMIN == this.role;
     }
 
     // 비밀번호 찾기용 힌트 답변
@@ -50,19 +53,12 @@ public class UserEntity {
     private LocalDateTime lastEmailSentAt;
 
     @Builder
-    public UserEntity(String username, String password, String email,String hintAnswer) {
+    public UserEntity(String username, String password, String email, String hintAnswer) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.hintAnswer = hintAnswer;
-        role = "USER";
-    }
-
-    @Builder
-    public UserEntity(String username, String password) {
-        this.username = username;
-        this.password = password;
-        role = "USER";
+        this.role = Role.USER;
     }
 
     public void updatePassword(String newPassword) {
@@ -71,7 +67,7 @@ public class UserEntity {
 
     // 관리자로 승급시키는 메서드
     public void promoteToAdmin() {
-        this.role = "ADMIN";
+        this.role = Role.ADMIN;
     }
 
     // 쿨타임(5분)이 지났는지 확인하는 편의 메서드
