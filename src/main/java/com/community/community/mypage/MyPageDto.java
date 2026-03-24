@@ -21,7 +21,7 @@ public class MyPageDto {
             return new MyPageInfoResponse(
                     user.getUsername(),
                     user.getEmail(),
-                    user.getRole(),
+                    user.getRole().name(),
                     user.getHintAnswer()
             );
         }
