@@ -14,7 +14,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -117,7 +116,6 @@ public class PostController {
                     "**요청 데이터:**\n" +
                     "- `keyword`: 제목 또는 내용 검색어 (선택)\n" +
                     "- `page`, `size`, `sort`: 페이징 및 정렬 파라미터 (기본값: 최신순 10개)")
-    @Transactional(readOnly = true)
     @GetMapping
     public ResponseEntity<Page<PostListResponse>> getAllPost(
             @Parameter(description = "검색 키워드 (제목 또는 내용에 포함된 단어)")

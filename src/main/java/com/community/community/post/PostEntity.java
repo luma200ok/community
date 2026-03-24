@@ -79,6 +79,10 @@ public class PostEntity extends BaseTimeEntity {
         this.viewCount++;
     }
 
+    public void addViewCount(long count) {
+        this.viewCount += count;
+    }
+
     public void increaseLikeCount() {
         this.likeCount++;
     }

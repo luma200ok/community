@@ -180,11 +180,7 @@ public class PostService {
             String viewCountStr = redisService.getValues(key);
             if (viewCountStr != null) {
                 long viewCount = Long.parseLong(viewCountStr);
-                postRepository.findById(postId).ifPresent(post -> {
-                    for (int i = 0; i < viewCount; i++) {
-                        post.increaseViewCount();
-                    }
-                });
+                postRepository.findById(postId).ifPresent(post -> post.addViewCount(viewCount));
                 redisService.delete(key);
             }
         }
