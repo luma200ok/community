@@ -333,7 +333,7 @@ export async function updatePost() {
         const response = await fetchWithAuth(`${API_BASE}/posts/${currentPostId}`, { method: 'PUT', body: formData });
         if (response.ok) {
             showToast('수정 성공!', 'success');
-            navigate('posts/' + currentPostId);
+            await viewPost(currentPostId);
         } else {
             const err = await response.json().catch(() => ({}));
             showToast('수정 실패: ' + (err.message || '권한이 없습니다.'), 'error');
