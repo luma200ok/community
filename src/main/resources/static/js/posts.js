@@ -8,6 +8,7 @@ import { showSection, showList, escapeHtml } from './ui.js';
 
 let currentPostId = null;
 let currentPostCategory = '자유';
+let currentPostRawContent = '';   // 수정 폼 복원용 원본 마크다운
 export let accumulatedFiles = [];
 
 export function getCurrentPostId() { return currentPostId; }
@@ -95,13 +96,22 @@ export async function viewPost(postId) {
         }
         const post = await response.json();
         currentPostCategory = post.category;
+        currentPostRawContent = post.content;
 
         showSection('detail');
 
         document.getElementById('detail-title').innerText = post.title;
         document.getElementById('detail-meta').innerText =
             `👤 작성자: ${post.writer} | 👀 조회: ${post.viewCount} | 📅 ${post.createdAt}`;
-        document.getElementById('detail-content').innerText = post.content;
+
+        // 마크다운 렌더링 (DOMPurify로 XSS 방지)
+        const contentEl = document.getElementById('detail-content');
+        if (window.marked && window.DOMPurify) {
+            contentEl.style.whiteSpace = 'normal';
+            contentEl.innerHTML = DOMPurify.sanitize(marked.parse(post.content));
+        } else {
+            contentEl.innerText = post.content;
+        }
 
         // 첨부 파일
         const imgDiv = document.getElementById('detail-images');
@@ -295,7 +305,7 @@ export async function writePost() {
 // ==========================================
 export function showEditForm() {
     document.getElementById('edit-title').value    = document.getElementById('detail-title').innerText;
-    document.getElementById('edit-content').value  = document.getElementById('detail-content').innerText;
+    document.getElementById('edit-content').value  = currentPostRawContent;
     document.getElementById('edit-category').value = currentPostCategory;
     document.getElementById('edit-imageFile').value = '';
     accumulatedFiles = [];

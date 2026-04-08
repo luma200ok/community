@@ -105,7 +105,8 @@
                 <option value="공지">🚨 공지 (관리자 전용)</option>
             </select>
             <input type="text" id="title" class="input-box" placeholder="게시글 제목">
-            <textarea id="content" class="input-box" rows="4" placeholder="게시글 내용"></textarea>
+            <textarea id="content" class="input-box" rows="8" placeholder="게시글 내용&#10;&#10;마크다운을 지원합니다.&#10;**볼드** / *이탤릭* / # 제목 / - 목록 / `코드` / ```코드블록```&#10;노션에서 복사 시 마크다운으로 붙여넣기 하면 서식이 유지됩니다."></textarea>
+            <p style="font-size:12px;color:#999;margin:-10px 0 10px;">📝 마크다운 지원 | <b>**볼드**</b> · <i>*이탤릭*</i> · # 제목 · - 목록 · `코드`</p>
             <input type="file" id="imageFile" accept="image/*, application/pdf" multiple style="display: none;" onchange="handleFileSelect(this, 'write-image-preview', 'write-file-count')">
             <label for="imageFile" class="btn btn-outline" style="display: block; text-align: center; margin-bottom: 10px; border: 2px dashed #ccc; cursor: pointer;">
                 📸 여기를 눌러 사진 추가하기 (계속 추가 가능!)
@@ -172,7 +173,8 @@
             <option value="공지">🚨 공지 (관리자 전용)</option>
         </select>
         <input type="text" id="edit-title" class="input-box" placeholder="게시글 제목">
-        <textarea id="edit-content" class="input-box" rows="4" placeholder="게시글 내용"></textarea>
+        <textarea id="edit-content" class="input-box" rows="8" placeholder="게시글 내용"></textarea>
+        <p style="font-size:12px;color:#999;margin:-10px 0 10px;">📝 마크다운 지원 | <b>**볼드**</b> · <i>*이탤릭*</i> · # 제목 · - 목록 · `코드`</p>
         <input type="file" id="edit-imageFile" accept="image/*application/pdf" multiple style="display: none;" onchange="handleFileSelect(this, 'edit-image-preview', 'edit-file-count')">
         <label for="edit-imageFile" class="btn btn-outline" style="display: block; text-align: center; margin-bottom: 10px; border: 2px dashed #ccc; cursor: pointer;">
             📸 여기를 눌러 사진 추가하기 (계속 추가 가능!)
@@ -189,6 +191,8 @@
 </main>
 
 <div id="toast-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
 <script type="module" src="/js/app.js"></script>
 </body>
 </html>

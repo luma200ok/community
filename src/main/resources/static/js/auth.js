@@ -123,10 +123,27 @@ export async function logout() {
     }
     clearAccessToken();
     localStorage.removeItem('username');
+    clearAllForms();
     showToast('로그아웃 되었습니다.', 'info');
     renderHeader();
     showList();
     navigate('');
+}
+
+function clearAllForms() {
+    const fields = [
+        'username', 'password',                              // 로그인
+        'reg-username', 'reg-password', 'reg-email', 'reg-hint', // 회원가입
+        'find-username', 'find-email', 'find-hint',          // 비밀번호 찾기
+        'title', 'content',                                  // 글쓰기
+        'edit-title', 'edit-content',                        // 글수정
+        'comment-input',                                     // 댓글
+        'upd-current-pw', 'upd-new-pw', 'upd-new-hint',     // 마이페이지 수정
+    ];
+    fields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
 }
 
 export async function findPassword() {
