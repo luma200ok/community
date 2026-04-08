@@ -362,9 +362,24 @@ export async function deletePost() {
 // ==========================================
 // 파일 업로드 미리보기
 // ==========================================
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+
 export function handleFileSelect(input, previewBoxId, countBoxId) {
     if (!input.files || input.files.length === 0) return;
-    Array.from(input.files).forEach(file => accumulatedFiles.push(file));
+
+    const rejected = [];
+    Array.from(input.files).forEach(file => {
+        if (ALLOWED_TYPES.includes(file.type)) {
+            accumulatedFiles.push(file);
+        } else {
+            rejected.push(file.name);
+        }
+    });
+
+    if (rejected.length > 0) {
+        showToast(`이미지(jpg·png·gif·webp)와 PDF만 업로드 가능합니다.\n거부된 파일: ${rejected.join(', ')}`, 'error');
+    }
+
     input.value = '';
     updatePreviewUI(previewBoxId, countBoxId);
 }
