@@ -5,7 +5,7 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # 💡 로컬호스트 3306 포트의 community 데이터베이스에 연결!
-    url: jdbc:mysql://localhost:3306/community?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/community?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
