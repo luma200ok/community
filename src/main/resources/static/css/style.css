@@ -56,3 +56,40 @@ body { margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-sys
 .link-text { cursor: pointer; color: #007bff; text-decoration: underline; margin: 0 5px; }
 .post-meta { font-size: 0.9em; color: #777; }
 .comment-box { border-bottom: 1px solid #eee; padding: 15px 0; }
+
+/* 이미지 없는 카드 플레이스홀더 */
+.card-image-placeholder {
+    width: 100%; height: 160px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* 토스트 알림 */
+#toast-container {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+}
+.toast {
+    padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+    color: white; max-width: 320px; opacity: 0; transform: translateX(120%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.toast-show { opacity: 1; transform: translateX(0); }
+.toast-success { background-color: #28a745; }
+.toast-error   { background-color: #dc3545; }
+.toast-info    { background-color: #007bff; }
+
+/* 반응형 (모바일) */
+@media (max-width: 768px) {
+    .header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+    .header h1 { font-size: 18px; }
+    .header-right { gap: 6px; flex-wrap: wrap; }
+    .header-right .btn { padding: 5px 8px; font-size: 12px; }
+    .main-container { padding: 10px; }
+    .card-container { grid-template-columns: 1fr; }
+    .form-card { padding: 20px; }
+    .detail-card { padding: 20px; }
+    #toast-container { right: 10px; left: 10px; }
+    .toast { max-width: 100%; }
+    .detail-card [style*="float: right"] { float: none; margin-bottom: 12px; }
+}

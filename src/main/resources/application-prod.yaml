@@ -14,3 +14,6 @@ spring:
       ddl-auto: update # 기존 데이터 유지, 변경된 테이블 구조만 업데이트
     show-sql: false
     database-platform: org.hibernate.dialect.MySQLDialect # 난 MySQL이다! 하고 명시
+app:
+  cookie:
+    secure: true
