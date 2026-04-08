@@ -114,6 +114,7 @@ window.toggleUpdateForm = toggleUpdateForm;
 window.updateUserInfo  = updateUserInfo;
 window.handleLogoClick = handleLogoClick;
 window.navigate        = navigate;
+window.showList        = showList;
 
 // 뒤로가기/앞으로가기 지원
 window.addEventListener('hashchange', handleRoute);
