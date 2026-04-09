@@ -1,5 +1,6 @@
 package com.community.community.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -7,9 +8,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-
 import static com.community.community.exception.ErrorDto.*;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -37,7 +38,7 @@ public class GlobalExceptionHandler {
     // 4. 그 외 예상치 못한 모든 서버 에러 - 500 Internal Server Error
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        e.printStackTrace(); // 서버 로그에는 진짜 에러의 원인을 찍어주고
+        log.error("Unhandled exception", e);
         ErrorResponse response = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "서버 내부에서 에러가 발생했습니다.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response); // 프론트에게는 정제된 메시지만 전달
     }

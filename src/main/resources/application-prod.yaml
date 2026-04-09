@@ -11,9 +11,18 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # 기존 데이터 유지, 변경된 테이블 구조만 업데이트
+      ddl-auto: validate # 운영 환경에서는 스키마 변경 금지, 불일치 시 시작 실패
     show-sql: false
-    database-platform: org.hibernate.dialect.MySQLDialect # 난 MySQL이다! 하고 명시
+    database-platform: org.hibernate.dialect.MySQLDialect
+
+springdoc:
+  api-docs:
+    enabled: false # 운영 환경에서 Swagger 비활성화
+  swagger-ui:
+    enabled: false
+
 app:
   cookie:
     secure: true
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS} # 운영 도메인 명시 (예: https://example.com)
