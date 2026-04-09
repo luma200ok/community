@@ -82,6 +82,8 @@ jobs:
             export MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}"
             export MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}"
             export S3_FOLDER=prod
+            export CORS_ALLOWED_ORIGINS="${{ secrets.CORS_ALLOWED_ORIGINS }}"
+            export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
 
             nohup java -jar \
             -Xmx192m \
