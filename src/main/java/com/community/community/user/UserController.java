@@ -2,10 +2,12 @@ package com.community.community.user;
 
 import com.community.community.exception.CustomException;
 import com.community.community.exception.ErrorCode;
+import com.community.community.security.RateLimitService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,13 +38,16 @@ import static com.community.community.user.UserDto.UserSignupRequest;
 public class UserController {
 
     private final UserService userService;
+    private final RateLimitService rateLimitService;
 
     @Value("${app.cookie.secure:false}")
     private boolean secureCookie;
 
     @Operation(summary = "회원가입", description = "아이디, 비밀번호, 이메일을 입력받아 새로운 사용자를 등록합니다.")
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@Valid @RequestBody UserSignupRequest request) {
+    public ResponseEntity<String> signup(@Valid @RequestBody UserSignupRequest request,
+                                         HttpServletRequest httpRequest) {
+        rateLimitService.checkSignupRateLimit(httpRequest.getRemoteAddr());
         userService.signUp(request);
         return ResponseEntity.ok("가입 완료");
     }
@@ -50,7 +55,9 @@ public class UserController {
     @Operation(summary = "로그인", description = "아이디와 비밀번호를 검증한 후, Access Token 반환 및 Refresh Token을 httpOnly 쿠키로 발급합니다.")
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@RequestBody UserLoginRequest request,
-                                               HttpServletResponse response) {
+                                               HttpServletResponse response,
+                                               HttpServletRequest httpRequest) {
+        rateLimitService.checkLoginRateLimit(httpRequest.getRemoteAddr());
         TokenResponse tokenResponse = userService.login(request);
 
         setRefreshTokenCookie(response, tokenResponse.refreshToken());
@@ -117,8 +124,9 @@ public class UserController {
             summary = "비밀번호 찾기",
             description = "아이디와 이메일을 입력하면, 해당 이메일로 임시 비밀번호를 발송합니다.")
     @PostMapping("/password/find")
-    public ResponseEntity<String> findPassword(@RequestBody @Valid PasswordFindRequest request) {
-
+    public ResponseEntity<String> findPassword(@RequestBody @Valid PasswordFindRequest request,
+                                               HttpServletRequest httpRequest) {
+        rateLimitService.checkPasswordFindRateLimit(httpRequest.getRemoteAddr());
         userService.resetPasswordAndSendEmail(request);
 
         return ResponseEntity.ok("입력하신 이메일로 임시 비밀번호가 성공적으로 발송되었습니다.");

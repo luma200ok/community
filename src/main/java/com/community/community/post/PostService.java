@@ -101,14 +101,15 @@ public class PostService {
             throw new CustomException(EDIT_ACCESS_DENIED);
         }
 
+        // H-6: 권한 검증을 S3 업로드보다 먼저 수행 (불필요한 파일 업로드 방지)
+        if ("공지".equals(request.category()) && !post.getUserEntity().isAdmin()) {
+            throw new CustomException(EDIT_ACCESS_DENIED);
+        }
+
         if (images != null && !images.isEmpty()) {
             post.getImages().forEach(image -> s3Service.deleteFile(image.getImageUrl()));
             post.getImages().clear();
             uploadImages(images, post);
-        }
-
-        if ("공지".equals(request.category()) && !post.getUserEntity().isAdmin()) {
-            throw new CustomException(EDIT_ACCESS_DENIED);
         }
 
         post.update(request.title(), request.content(), request.category());

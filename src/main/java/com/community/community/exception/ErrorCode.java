@@ -29,7 +29,9 @@ public enum ErrorCode {
     COMMENT_MISMATCH(HttpStatus.BAD_REQUEST, "해당 게시글의 댓글이 아닙니다."),
 
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 파일입니다."),
-    FILE_EXTENSION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 확장자입니다.");
+    FILE_EXTENSION_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 확장자입니다."),
+
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.");
 
     // 필요한 에러가 생길 때마다 여기에 한 줄씩 추가만 하면 됩니다!
 

@@ -1,10 +1,14 @@
 package com.community.community.redis;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -31,9 +35,14 @@ public class RedisService {
         redisTemplate.opsForValue().increment(key);
     }
 
-    // 💡 2. 특정 패턴(viewCount::*)을 가진 모든 키 찾아오기
-    public java.util.Set<String> getKeys(String pattern) {
-        return redisTemplate.keys(pattern);
+    // 💡 2. 특정 패턴(viewCount::*)을 가진 모든 키 찾아오기 (scan: 논블로킹, keys: 블로킹 O(N) 사용 금지)
+    public Set<String> getKeys(String pattern) {
+        Set<String> keys = new HashSet<>();
+        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
+        try (Cursor<String> cursor = redisTemplate.scan(options)) {
+            cursor.forEachRemaining(keys::add);
+        }
+        return keys;
     }
 
     // 💡 3. DB 동기화가 끝난 키는 삭제

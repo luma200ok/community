@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,7 +53,7 @@ public class PostController {
     public ResponseEntity<String> writePost(
             // 2. @RequestBody 대신 @RequestPart를 사용하여 JSON 데이터와 파일을 따로 받습니다.
             @Parameter(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = org.springframework.http.MediaType.APPLICATION_JSON_VALUE))
-            @RequestPart(value = "request") PostCreateRequest request,
+            @Valid @RequestPart(value = "request") PostCreateRequest request,
             // 3. 이미지는 없을 수도 있으니 required = false
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
@@ -72,9 +73,10 @@ public class PostController {
             // 비로그인 유저도 접근 가능하므로 (required = false) 처럼 동작하여 null이 들어올수 있음
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 
+        // H-7: getRemoteAddr() 사용 (X-Forwarded-For는 클라이언트 위조 가능하므로 사용 안 함)
+        // 리버스 프록시 뒤에 배포할 경우 신뢰된 프록시 IP 목록을 서버 설정으로 관리할 것
         String clientIp = request.getRemoteAddr();
 
-        // URL에서 뽑아낸 ID값을 서비스에 넘겨 DTO 받음
         PostDetailResponse response = postService.getPost(id, clientIp, userId);
 
         return ResponseEntity.ok(response);
@@ -89,7 +91,7 @@ public class PostController {
     public ResponseEntity<String> updatePost(
             @PathVariable Long id,
             @Parameter(content = @io.swagger.v3.oas.annotations.media.Content(mediaType = org.springframework.http.MediaType.APPLICATION_JSON_VALUE))
-            @RequestPart(value = "request") PostUpdateRequest request,
+            @Valid @RequestPart(value = "request") PostUpdateRequest request,
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @Parameter(hidden = true) @AuthenticationPrincipal Long userId) {
 

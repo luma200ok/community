@@ -3,6 +3,8 @@ package com.community.community.post;
 import com.community.community.comment.CommentDto;
 import com.community.community.comment.CommentEntity;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,10 +14,16 @@ import static com.community.community.comment.CommentDto.*;
 public class PostDto {
 
     public record PostCreateRequest(
+            @NotBlank(message = "제목은 필수입니다.")
+            @Size(max = 200, message = "제목은 200자 이내여야 합니다.")
             String title,
+
+            @NotBlank(message = "내용은 필수입니다.")
+            @Size(max = 10000, message = "내용은 10000자 이내여야 합니다.")
             String content,
+
+            @NotBlank(message = "카테고리는 필수입니다.")
             String category
-//            Long userId // 글쓴이 식별용 -> JWT 필터로 user 확인
     ) {
     }
 
@@ -99,6 +107,17 @@ public class PostDto {
         }
     }
 
-    public record PostUpdateRequest(String title, String content,String category) {
+    public record PostUpdateRequest(
+            @NotBlank(message = "제목은 필수입니다.")
+            @Size(max = 200, message = "제목은 200자 이내여야 합니다.")
+            String title,
+
+            @NotBlank(message = "내용은 필수입니다.")
+            @Size(max = 10000, message = "내용은 10000자 이내여야 합니다.")
+            String content,
+
+            @NotBlank(message = "카테고리는 필수입니다.")
+            String category
+    ) {
     }
 }

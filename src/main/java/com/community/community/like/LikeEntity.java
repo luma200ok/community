@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +19,9 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "post_like")
+@Table(name = "post_like", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_post_like_user_post", columnNames = {"user_id", "post_id"})
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LikeEntity extends BaseTimeEntity {
 
