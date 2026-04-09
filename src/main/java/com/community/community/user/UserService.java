@@ -156,8 +156,15 @@ public class UserService {
         UserEntity user = userRepository.findByUsernameAndEmail(request.username(), request.email())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        // 💡 방어막 1: 힌트 정답이 일치하는지 확인 (bcrypt 비교)
-        if (!passwordEncoder.matches(request.hintAnswer(), user.getHintAnswer())) {
+        // 💡 방어막 1: 힌트 정답 확인
+        // 구버전 계정(평문 저장) / 신버전 계정(bcrypt 저장) 모두 처리
+        String storedHint = user.getHintAnswer();
+        boolean hintMatches = (storedHint != null) && (
+                storedHint.startsWith("$2a$") || storedHint.startsWith("$2b$")
+                        ? passwordEncoder.matches(request.hintAnswer(), storedHint)
+                        : storedHint.equals(request.hintAnswer())
+        );
+        if (!hintMatches) {
             throw new CustomException(ErrorCode.INVALID_HINT_ANSWER);
         }
 
