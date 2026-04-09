@@ -117,16 +117,17 @@ export async function viewPost(postId) {
         const imgDiv = document.getElementById('detail-images');
         imgDiv.innerHTML = '';
         post.imageUrls.forEach(url => {
+            const safeUrl = escapeHtml(url);
             if (url.toLowerCase().endsWith('.pdf')) {
                 imgDiv.innerHTML += `
                     <div style="margin-bottom:15px;padding:15px;border:1px solid #ddd;border-radius:8px;background:#fff5f5;display:inline-block;">
                         <span style="font-size:20px;vertical-align:middle;">📄</span>
-                        <a href="${url}" target="_blank" rel="noopener noreferrer" style="color:#dc3545;text-decoration:none;font-weight:bold;margin-left:8px;">
+                        <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="color:#dc3545;text-decoration:none;font-weight:bold;margin-left:8px;">
                             첨부된 PDF 파일 보기 / 다운로드
                         </a>
                     </div><br>`;
             } else {
-                imgDiv.innerHTML += `<img src="${url}" style="max-width:100%;border-radius:8px;margin-bottom:15px;" alt="첨부 이미지">`;
+                imgDiv.innerHTML += `<img src="${safeUrl}" style="max-width:100%;border-radius:8px;margin-bottom:15px;" alt="첨부 이미지">`;
             }
         });
 

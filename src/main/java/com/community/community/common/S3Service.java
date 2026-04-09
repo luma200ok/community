@@ -12,10 +12,14 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
+import org.apache.tika.Tika;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.community.community.exception.ErrorCode.*;
@@ -50,8 +54,9 @@ public class S3Service {
             throw new CustomException(FILE_NOT_FOUND);
         }
 
-        // S3에 올리기 전에 무조건 확장자 검사부터
+        // S3에 올리기 전에 확장자 + 실제 MIME 타입 검사
         validateImageFileExtension(file.getOriginalFilename());
+        validateMimeType(file);
 
         // 1. 파일 이름 중복을 막기 위해 겹치지 않는 랜덤 이름(UUID) 생성
         String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
@@ -104,6 +109,30 @@ public class S3Service {
 
         if (!allowedExtensionList.contains(extension)) {
             throw new CustomException(INVALID_FILE_EXTENSION);
+        }
+    }
+
+    // 2. 실제 파일 바이너리(Magic Byte)를 읽어 MIME 타입을 검증하는 메서드
+    // 확장자만 바꿔서 위장한 악성 파일을 차단
+    private static final Map<String, String> ALLOWED_MIME_TYPES = Map.of(
+            "image/jpeg", "jpg",
+            "image/png",  "png",
+            "image/gif",  "gif",
+            "image/webp", "webp",
+            "application/pdf", "pdf"
+    );
+
+    private void validateMimeType(MultipartFile file) {
+        Tika tika = new Tika();
+        try (InputStream inputStream = file.getInputStream()) {
+            String detectedMime = tika.detect(inputStream);
+            if (!ALLOWED_MIME_TYPES.containsKey(detectedMime)) {
+                throw new CustomException(INVALID_FILE_EXTENSION);
+            }
+        } catch (CustomException e) {
+            throw e;
+        } catch (IOException e) {
+            throw new RuntimeException("파일 MIME 타입 검증에 실패했습니다.", e);
         }
     }
 

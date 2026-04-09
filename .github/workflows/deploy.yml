@@ -84,6 +84,8 @@ jobs:
             export S3_FOLDER=prod
 
             nohup java -jar \
+            -Xmx192m \
+            -XX:+UseSerialGC \
             -Dspring.profiles.active=prod \
             -Dserver.port=${TARGET_PORT} \
             $JAR_PATH > nohup.out 2>&1 &
