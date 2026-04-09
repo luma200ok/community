@@ -79,9 +79,14 @@ public class PostService {
         String viewed = redisService.getValues(redisKey);
 
         if (viewed == null) {
-            redisService.increment("viewCount::"+id);
+            redisService.increment("viewCount::" + id);
             redisService.setValues(redisKey, "viewed", Duration.ofHours(viewCountTtlHours));
         }
+
+        // Redis 누적 조회수(배치 미동기화분)를 DB 값에 더해 실시간 조회수 표시
+        String redisCountStr = redisService.getValues("viewCount::" + id);
+        long redisCount = redisCountStr != null ? Long.parseLong(redisCountStr) : 0L;
+        long totalViewCount = post.getViewCount() + redisCount;
 
         boolean isLiked = false;
         if (userId != null) {
@@ -90,7 +95,7 @@ public class PostService {
 
         List<CommentEntity> comments = commentRepository.findCommentsByPostIdWithUser(id);
 
-        return PostDetailResponse.from(post, comments, isLiked);
+        return PostDetailResponse.from(post, comments, isLiked, totalViewCount);
     }
 
     public void updatePost(Long id, PostUpdateRequest request, List<MultipartFile> images, Long userId) {

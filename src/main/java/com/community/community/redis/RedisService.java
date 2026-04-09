@@ -30,9 +30,9 @@ public class RedisService {
         redisTemplate.delete(key);
     }
 
-    // 💡 1. 특정 키의 숫자를 1씩 증가 (조회수 카운팅용)
-    public void increment(String key) {
-        redisTemplate.opsForValue().increment(key);
+    // 💡 1. 특정 키의 숫자를 1씩 증가 후 현재 값 반환 (조회수 카운팅용)
+    public Long increment(String key) {
+        return redisTemplate.opsForValue().increment(key);
     }
 
     // 💡 2. 특정 패턴(viewCount::*)을 가진 모든 키 찾아오기 (scan: 논블로킹, keys: 블로킹 O(N) 사용 금지)

@@ -46,7 +46,7 @@ public class PostDto {
             List<CommentResponse> comments // 댓글 리스트
     ) {
         public static PostDetailResponse from(
-                PostEntity post, List<CommentEntity> comments, boolean isLiked) {
+                PostEntity post, List<CommentEntity> comments, boolean isLiked, long totalViewCount) {
             // 2. PostEntity에 매달린 PostImageEntity들에서 URL만 쏙쏙 뽑아내어 리스트로
             List<String> urls = post.getImages().stream()
                     .map(PostImageEntity::getImageUrl)
@@ -57,7 +57,7 @@ public class PostDto {
                     post.getTitle(),
                     post.getContent(),
                     post.getUserEntity().getUsername(), // N+1 터지는 지점
-                    post.getViewCount(),
+                    totalViewCount,
                     post.getLikeCount(),
                     isLiked,
                     post.getCategory(),
