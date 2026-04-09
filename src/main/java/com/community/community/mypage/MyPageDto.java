@@ -10,19 +10,17 @@ public class MyPageDto {
     ) {
     }
 
-    // 내 정보 조회 응답
+    // 내 정보 조회 응답 (hintAnswer는 보안상 응답에서 제외)
     public record MyPageInfoResponse(
             String username,
             String email,
-            String role,
-            String hintAnswer
+            String role
     ) {
         public static MyPageInfoResponse from(UserEntity user) {
             return new MyPageInfoResponse(
                     user.getUsername(),
                     user.getEmail(),
-                    user.getRole().name(),
-                    user.getHintAnswer()
+                    user.getRole().name()
             );
         }
     }

@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
 
 import static com.community.community.user.UserDto.PasswordFindRequest;
+import static com.community.community.user.UserDto.PromoteRequest;
 import static com.community.community.user.UserDto.TokenReissueRequest;
 import static com.community.community.user.UserDto.TokenResponse;
 import static com.community.community.user.UserDto.UserLoginRequest;
@@ -126,11 +126,8 @@ public class UserController {
 
     @Hidden
     @PostMapping("/promote")
-    public ResponseEntity<String> promoteToAdmin(
-            @RequestParam String username,
-            @RequestParam String secretKey) { // 주소창이나 파라미터로 시크릿 키를 받음
-
-        userService.promoteToAdmin(username, secretKey);
+    public ResponseEntity<String> promoteToAdmin(@RequestBody @Valid PromoteRequest request) {
+        userService.promoteToAdmin(request.username(), request.secretKey());
         return ResponseEntity.ok("관리자로 성공적으로 승급되었습니다. 환영합니다, 마스터.");
     }
 }

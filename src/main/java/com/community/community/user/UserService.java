@@ -43,12 +43,12 @@ public class UserService {
         // 2. 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(request.password());
 
-        // 3. 엔티티 조립
+        // 3. 엔티티 조립 (hintAnswer도 bcrypt 해시로 저장)
         UserEntity userEntity = UserEntity.builder()
                 .username(request.username())
                 .password(encodedPassword)
                 .email(request.email())
-                .hintAnswer(request.hintAnswer())
+                .hintAnswer(passwordEncoder.encode(request.hintAnswer()))
                 .build();
 
         // 4. DB 저장
@@ -156,8 +156,8 @@ public class UserService {
         UserEntity user = userRepository.findByUsernameAndEmail(request.username(), request.email())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        // 💡 방어막 1: 힌트 정답이 일치하는지 확인! (틀리면 에러 뱉고 컷!)
-        if (!user.getHintAnswer().equals(request.hintAnswer())) {
+        // 💡 방어막 1: 힌트 정답이 일치하는지 확인 (bcrypt 비교)
+        if (!passwordEncoder.matches(request.hintAnswer(), user.getHintAnswer())) {
             throw new CustomException(ErrorCode.INVALID_HINT_ANSWER);
         }
 

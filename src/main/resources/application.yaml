@@ -1,6 +1,9 @@
 admin:
   secret-key: ${ADMIN_SECRET_KEY:local-secret-key}
 
+jwt:
+  secret-key: ${JWT_SECRET_KEY:local-jwt-secret-key-for-dev-must-be-32chars!!}
+
 server:
   forward-headers-strategy: native
 

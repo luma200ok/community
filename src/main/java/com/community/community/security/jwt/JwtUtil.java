@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -13,11 +14,11 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // 추후 UUID 업데이트
-    private final String SECRET_KEY_STRING =
-            "my-super-secret-key-for-community-project-must-be-long-enough";
-    private final SecretKey secretKey =
-            Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes(StandardCharsets.UTF_8));
+    private final SecretKey secretKey;
+
+    public JwtUtil(@Value("${jwt.secret-key}") String secretKeyString) {
+        this.secretKey = Keys.hmacShaKeyFor(secretKeyString.getBytes(StandardCharsets.UTF_8));
+    }
 
     // 2. 토큰 만료 시간 - 1H (1000ms * 60s *60m)
     private final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60;

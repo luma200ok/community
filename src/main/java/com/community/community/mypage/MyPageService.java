@@ -97,6 +97,6 @@ public class MyPageService {
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
-        user.updateHintAnswer(request.newHintAnswer());
+        user.updateHintAnswer(passwordEncoder.encode(request.newHintAnswer()));
     }
 }

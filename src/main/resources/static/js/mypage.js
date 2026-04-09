@@ -27,7 +27,6 @@ export async function showMyPage() {
             const user = await infoRes.json();
             document.getElementById('my-username').innerText = user.username;
             document.getElementById('my-email').innerText    = user.email;
-            document.getElementById('my-hint').innerText     = user.hintAnswer;
             document.getElementById('my-role').innerHTML     = user.role === 'ADMIN'
                 ? '<span style="color:red;font-weight:bold;">👑 관리자</span>'
                 : '👤 일반 회원';
