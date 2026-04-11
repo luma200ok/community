@@ -151,7 +151,11 @@ public class PostService {
     @Transactional(readOnly = true)
     public Page<PostListResponse> getAllPost(Pageable pageable, String keyword) {
         Page<PostEntity> posts = postRepository.findPostsWithNoticeOnTop(keyword, pageable);
-        return posts.map(PostListResponse::from);
+        return posts.map(post -> {
+            String redisCountStr = redisService.getValues("viewCount::" + post.getId());
+            long redisCount = redisCountStr != null ? Long.parseLong(redisCountStr) : 0L;
+            return PostListResponse.from(post, post.getViewCount() + redisCount);
+        });
     }
 
     public void hardDeleteOldPosts() {

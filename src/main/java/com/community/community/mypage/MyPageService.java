@@ -8,6 +8,7 @@ import com.community.community.like.LikeEntity;
 import com.community.community.like.LikeRepository;
 import com.community.community.post.PostEntity;
 import com.community.community.post.PostRepository;
+import com.community.community.redis.RedisService;
 import com.community.community.user.UserDto;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
@@ -34,6 +35,7 @@ public class MyPageService {
     private final CommentRepository commentRepository;
     private final LikeRepository likeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RedisService redisService;
 
     /**
      * 1. 비밀번호 변경
@@ -56,7 +58,7 @@ public class MyPageService {
     @Transactional(readOnly = true)
     public Page<PostListResponse> getMyPosts(Long userId, Pageable pageable) {
         return postRepository.findByUserEntity_id(userId, pageable)
-                .map(PostListResponse::from);
+                .map(post -> PostListResponse.from(post, post.getViewCount() + getRedisViewCount(post.getId())));
     }
 
     /**
@@ -78,7 +80,7 @@ public class MyPageService {
         // 3. PostEntity를 PostListResponse DTO로 변환
         return likeRepository.findByUserEntity_Id(userId, pageable)
                 .map(LikeEntity::getPostEntity)
-                .map(PostListResponse::from);
+                .map(post -> PostListResponse.from(post, post.getViewCount() + getRedisViewCount(post.getId())));
     }
 
     // 💡 내 기본 정보 조회 추가
@@ -98,5 +100,10 @@ public class MyPageService {
             throw new CustomException(ErrorCode.INVALID_PASSWORD);
         }
         user.updateHintAnswer(passwordEncoder.encode(request.newHintAnswer()));
+    }
+
+    private long getRedisViewCount(Long postId) {
+        String val = redisService.getValues("viewCount::" + postId);
+        return val != null ? Long.parseLong(val) : 0L;
     }
 }

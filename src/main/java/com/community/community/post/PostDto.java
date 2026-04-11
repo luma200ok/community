@@ -87,7 +87,7 @@ public class PostDto {
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
             LocalDateTime updatedAt
     ) {
-        public static PostListResponse from(PostEntity post) {
+        public static PostListResponse from(PostEntity post, long totalViewCount) {
             String thumb = (post.getImages() != null && !post.getImages().isEmpty())
                     ? post.getImages().get(0).getImageUrl()
                     : null;
@@ -96,7 +96,7 @@ public class PostDto {
                     post.getId(),
                     post.getTitle(),
                     post.getUserEntity().getUsername(),
-                    post.getViewCount(),
+                    totalViewCount,
                     post.getLikeCount(),
                     post.getCategory(),
                     thumb,
