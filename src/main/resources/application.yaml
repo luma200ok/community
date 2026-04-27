@@ -1,6 +1,9 @@
 admin:
   secret-key: ${ADMIN_SECRET_KEY:local-secret-key}
 
+discord:
+  webhook-url: ${DISCORD_WEBHOOK_URL:}
+
 jwt:
   secret-key: ${JWT_SECRET_KEY:local-jwt-secret-key-for-dev-must-be-32chars!!}
 

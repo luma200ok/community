@@ -1,6 +1,9 @@
 server:
   port: 8080
 
+discord:
+  webhook-url: "https://discord.com/api/webhooks/1498189685237747823/j1VIyQSwG8UnBitKs0wcAGyvgyebGHjd1zcZWLXUfEe1XpInb6976IkCvb_lOeDM03BL"
+
 spring:
   datasource:
     url: jdbc:h2:file:~/db/community # 로컬 테스트용 파일 DB

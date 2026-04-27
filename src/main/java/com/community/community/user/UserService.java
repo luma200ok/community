@@ -4,6 +4,7 @@ import com.community.community.security.jwt.JwtUtil;
 import com.community.community.redis.RedisService;
 import com.community.community.exception.CustomException;
 import com.community.community.exception.ErrorCode;
+import com.community.community.notification.DiscordNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,10 +30,9 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
-
     private final JwtUtil jwtUtil;
-
     private final RedisService redisService;
+    private final DiscordNotificationService discordNotificationService;
 
     //회원가입 기능
     public void signUp(UserSignupRequest request) {
@@ -53,6 +53,8 @@ public class UserService {
 
         // 4. DB 저장
         userRepository.save(userEntity);
+
+        discordNotificationService.sendSignupNotification(request.username());
     }
 
     /**

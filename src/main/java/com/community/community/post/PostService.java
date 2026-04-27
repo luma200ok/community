@@ -6,6 +6,7 @@ import com.community.community.common.S3Service;
 import com.community.community.redis.RedisService;
 import com.community.community.exception.CustomException;
 import com.community.community.like.LikeRepository;
+import com.community.community.notification.DiscordNotificationService;
 import com.community.community.user.UserEntity;
 import com.community.community.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,8 +42,8 @@ public class PostService {
     private final PostImageRepository postImageRepository;
     private final LikeRepository likeRepository;
     private final RedisService redisService;
-
     private final S3Service s3Service;
+    private final DiscordNotificationService discordNotificationService;
 
     @Value("${app.policy.post-retention-days:30}")
     private int postRetentionDays;
@@ -68,6 +69,7 @@ public class PostService {
         postRepository.save(post);
 
         uploadImages(images, post);
+        discordNotificationService.sendPostNotification(findUser.getUsername(), request.title(), request.category());
         return post.getId();
     }
 

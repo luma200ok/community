@@ -84,6 +84,7 @@ jobs:
             export S3_FOLDER=prod
             export CORS_ALLOWED_ORIGINS="${{ secrets.CORS_ALLOWED_ORIGINS }}"
             export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
+            export DISCORD_WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
 
             nohup java -jar \
             -Xmx192m \
