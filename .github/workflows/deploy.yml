@@ -1,124 +1,70 @@
 name: Community Server CI/CD
 
+# OCI(A, oci-arm1) 배포 — systemd 서비스 방식
+# 시크릿(DB/JWT/Discord 등)은 서버의 /etc/app-secrets/community.env 에 보관되어
+# 워크플로우는 host/user/key 만 필요하다.
+
 on:
   push:
-    branches: [ "main" ] # 본인의 기본 브랜치명에 맞게 수정하세요 (master 등)
+    branches: [ "main" ]
+    paths:
+      - 'src/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'gradle/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 1. 저장소 코드 가져오기
-        uses: actions/checkout@v3
+      - name: 1. 코드 체크아웃
+        uses: actions/checkout@v4
 
-      - name: 2. JDK 21 세팅
-        uses: actions/setup-java@v3
+      - name: 2. JDK 21
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'corretto'
 
-      - name: 3. Gradle 실행 권한 부여
-        run: chmod +x gradlew
+      - name: 3. 빌드 (테스트 제외)
+        run: |
+          chmod +x gradlew
+          ./gradlew bootJar -x test
 
-      - name: 4. 프로젝트 빌드 (테스트 제외)
-        run: ./gradlew clean build -x test
-
-      - name: 5. 빌드된 jar 파일을 EC2로 전송 (SCP)
-        uses: appleboy/scp-action@master
+      - name: 4. jar 업로드 (staging)
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          # 빌드된 jar 파일을 EC2의 /home/ec2-user/community 폴더로 보냅니다.
           source: "build/libs/*SNAPSHOT.jar"
-          target: "/home/ec2-user/community"
+          target: "/home/opc/apps/community/staging"
           strip_components: 2
+          rm: true
 
-      - name: 6. EC2에 접속해서 기존 서버 내리고 새 서버 실행 (SSH)
-        uses: appleboy/ssh-action@master
+      - name: 5. 배포 + 재시작 + 헬스체크
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ec2-user/community
-            
-            # 1. 현재 폴더에 전송된 최신 JAR 파일 찾기 (경로 수정!)
-            JAR_PATH=$(ls -tr *.jar | tail -n 1)
-            
-            if [ -z "$JAR_PATH" ]; then
-              echo "❌ 에러: 실행할 JAR 파일이 폴더에 없습니다!"
-              exit 1
-            fi
-            
-            # 2. 현재 Nginx가 바라보고 있는 포트 확인
-            CURRENT_PORT=$(grep -o '808[1-2]' /etc/nginx/conf.d/service-url.inc)
-            if [ "${CURRENT_PORT}" = "8081" ]; then
-              TARGET_PORT=8082
-            else
-              TARGET_PORT=8081
-            fi
-            
-            echo "======================================"
-            echo "> 현재 활성화된 포트: ${CURRENT_PORT}"
-            echo "> 새로 배포할 타겟 포트: ${TARGET_PORT}"
-            echo "> 실행 파일: ${JAR_PATH}"
-            echo "======================================"
-            
-            # 3. 혹시나 타겟 포트에 좀비 프로세스가 있다면 먼저 죽이기 (안전 장치)
-            TARGET_PID=$(sudo lsof -ti:${TARGET_PORT})
-            if [ ! -z "$TARGET_PID" ]; then
-              echo "> 좀비 프로세스 발견(PID: ${TARGET_PID}), 종료합니다."
-              sudo kill -9 ${TARGET_PID}
-            fi
-            
-            # 4. 타겟 포트에 새 서버 실행
-            export AWS_ACCESS_KEY="${{ secrets.AWS_ACCESS_KEY }}"
-            export AWS_SECRET_KEY="${{ secrets.AWS_SECRET_KEY }}"
-            export DB_USERNAME="${{ secrets.DB_USERNAME }}"
-            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            export ADMIN_SECRET_KEY="${{ secrets.ADMIN_SECRET_KEY }}"
-            export MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}"
-            export MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}"
-            export S3_FOLDER=prod
-            export CORS_ALLOWED_ORIGINS="${{ secrets.CORS_ALLOWED_ORIGINS }}"
-            export JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}"
-            export DISCORD_WEBHOOK_URL="${{ secrets.DISCORD_WEBHOOK_URL }}"
-
-            nohup java -jar \
-            -Xmx192m \
-            -XX:+UseSerialGC \
-            -Dspring.profiles.active=prod \
-            -Dserver.port=${TARGET_PORT} \
-            $JAR_PATH > nohup.out 2>&1 &
-            
-            # 5. Health Check
-            echo "> 새 서버가 켜질 때까지 기다립니다..."
-            for RETRY_COUNT in {1..10}
-            do
-              echo "> Health Check 시도 (${RETRY_COUNT}/10)..."
-              sleep 10
-              RESPONSE=$(curl -s http://127.0.0.1:${TARGET_PORT}/api/health)
-            
-              if [ "${RESPONSE}" = "OK" ]; then
-                echo "> Health Check 성공!"
-            
-                # Nginx 스위칭
-                echo "set \$service_url http://127.0.0.1:${TARGET_PORT};" | sudo tee /etc/nginx/conf.d/service-url.inc
-                sudo systemctl reload nginx
-            
-                # 구버전 서버 종료
-                CURRENT_PID=$(sudo lsof -ti:${CURRENT_PORT})
-                if [ ! -z "$CURRENT_PID" ]; then
-                  sudo kill -9 ${CURRENT_PID}
-                fi
-            
-                echo "> 🚀 무중단 배포 완료!"
-                exit 0
+            set -e
+            APP=community; PORT=8082
+            JAR=$(ls /home/opc/apps/$APP/staging/*.jar | grep -v plain | head -1)
+            echo "> 배포 jar: $JAR"
+            cp "$JAR" /home/opc/apps/$APP/$APP.jar
+            rm -rf /home/opc/apps/$APP/staging
+            sudo systemctl restart $APP
+            echo "> 재시작, 헬스체크..."
+            for i in $(seq 1 12); do
+              sleep 5
+              CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$PORT/api/health 2>/dev/null || echo 000)
+              if [ "$CODE" = "200" ] || [ "$CODE" = "401" ]; then
+                echo "> ✅ $APP 정상 (HTTP $CODE)"; exit 0
               fi
+              echo "> 시도 $i/12 (HTTP $CODE)..."
             done
-            
-            echo "> ❌ 배포 실패. 타겟 서버를 종료합니다."
-            sudo lsof -ti:${TARGET_PORT} | xargs sudo kill -9
-            exit 1
+            echo "> ❌ $APP 기동 실패"; sudo journalctl -u $APP -n 40 --no-pager; exit 1
