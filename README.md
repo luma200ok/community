@@ -6,9 +6,9 @@
 > 
 > AWS S3 파일 스토리지, Redis를 활용한 성능 개선 및 보안, Nginx를 통한 CI/CD 무중단 배포까지 실제 서비스와 동일한 인프라를 구축했습니다.
 
-🔗 **실제 서비스 접속해 보기:** [http://community.rkqkdrnportfolio.shop/](http://community.rkqkdrnportfolio.shop/)
+🔗 **실제 서비스 접속해 보기:** [http://community.luma200ok.com/](http://community.luma200ok.com/)
 
-🔗 **Swagger API**: [http://community.rkqkdrnportfolio.shop/swagger-ui/index.html](http://community.rkqkdrnportfolio.shop/swagger-ui/index.html)
+🔗 **Swagger API**: [http://community.luma200ok.com/swagger-ui/index.html](http://community.luma200ok.com/swagger-ui/index.html)
 <br>
 
 ## 🛠️ Tech Stack & Architecture
