@@ -22,8 +22,9 @@ case "$1" in
     "${COMPOSE[@]}" logs --tail=200 > "$LOG_DIR/last-failure.log" 2>&1 || true
     chmod 600 "$LOG_DIR/last-failure.log" || true
     "${COMPOSE[@]}" ps || true
-    # app은 container_name 고정(community) — ps -q로 안전 조회
-    APP_ID="$("${COMPOSE[@]}" ps -q app 2>/dev/null || true)"
+    # 서비스 키는 community-app 다(home-infra#15 — 공유망 일반명 충돌 회피).
+    # container_name 은 community 로 고정이라 터널 경로는 그대로다.
+    APP_ID="$("${COMPOSE[@]}" ps -q community-app 2>/dev/null || true)"
     if [ -n "$APP_ID" ]; then
       docker inspect "$APP_ID" --format 'app health: {{json .State.Health.Status}}' || true
     fi
